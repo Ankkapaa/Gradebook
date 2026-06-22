@@ -1,0 +1,1784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+<title>Gradebook</title>
+<style>
+/* ======================================================================
+   DESIGN TOKENS
+====================================================================== */
+:root {
+  --paper: #FAF6EE;
+  --paper-raised: #FFFFFF;
+  --ink: #1B2A41;
+  --ink-soft: #44546B;
+  --ink-faint: #8C95A6;
+  --rule: #E8E1D2;
+  --rule-strong: #D8CFB8;
+  --red: #C1432B;
+  --red-soft: #C1432B1A;
+  --sage: #5C7A5C;
+  --sage-soft: #5C7A5C1A;
+  --gold: #A8763E;
+  --gold-soft: #A8763E1A;
+  --font-display: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'IBM Plex Mono', 'SF Mono', Consolas, monospace;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+
+body {
+  background: var(--paper);
+  background-image: repeating-linear-gradient(transparent, transparent 27px, var(--rule) 27px, var(--rule) 28px);
+  min-height: 100vh;
+  font-family: var(--font-body);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: inherit; }
+
+/* ---------- Header ---------- */
+.gt-header {
+  background: var(--paper-raised);
+  border-bottom: 2px solid var(--ink);
+  position: sticky;
+  top: 0;
+  z-index: 30;
+}
+.gt-header-inner {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.gt-brand { display: flex; align-items: baseline; gap: 10px; }
+.gt-brand-mark { font-family: var(--font-display); font-size: 30px; color: var(--red); line-height: 1; }
+.gt-brand h1 { font-family: var(--font-display); font-size: 22px; font-weight: 600; margin: 0; letter-spacing: -0.01em; }
+.gt-brand p { margin: 0; font-size: 12px; color: var(--ink-faint); font-style: italic; font-family: var(--font-display); }
+
+.gt-tabs { display: flex; gap: 4px; background: var(--paper); border: 1.5px solid var(--rule-strong); border-radius: 8px; padding: 3px; }
+.gt-tabs button {
+  display: flex; align-items: center; gap: 6px; border: none; background: transparent;
+  padding: 7px 14px; border-radius: 6px; font-size: 13px; font-weight: 600;
+  color: var(--ink-soft); cursor: pointer; font-family: var(--font-body);
+  transition: background 0.15s, color 0.15s;
+}
+.gt-tabs button.active { background: var(--ink); color: var(--paper); }
+.gt-tabs button:hover:not(.active) { background: var(--rule); }
+
+.storage-warning {
+  max-width: 1040px; margin: 10px auto 0; padding: 0 18px;
+  display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--red);
+}
+
+/* ---------- Main ---------- */
+.gt-main { max-width: 1040px; margin: 0 auto; padding: 22px 18px 70px; display: flex; flex-direction: column; gap: 22px; }
+
+.panel { background: var(--paper-raised); border: 1.5px solid var(--rule-strong); border-radius: 12px; padding: 18px 20px; }
+.panel-title {
+  font-family: var(--font-display); font-size: 17px; font-weight: 600; margin: 0 0 14px;
+  padding-bottom: 10px; border-bottom: 1.5px solid var(--rule);
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+}
+.panel-title-sub { font-size: 11.5px; font-weight: 500; color: var(--ink-faint); font-family: var(--font-body); }
+
+/* ---------- Summary strip ---------- */
+.summary-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(165px, 1fr)); gap: 10px; }
+.summary-card {
+  background: var(--paper-raised); border: 1.5px solid var(--rule-strong); border-left: 4px solid var(--accent, var(--ink));
+  border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px;
+}
+.summary-card-top { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 700; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.03em; }
+.summary-card-mid { display: flex; align-items: baseline; gap: 8px; }
+.summary-card-avg { font-family: var(--font-mono); font-size: 26px; font-weight: 700; line-height: 1; }
+.summary-card-goal { font-size: 11px; color: var(--ink-faint); font-family: var(--font-mono); }
+
+.letter-grade { font-family: var(--font-mono); font-size: 12px; font-weight: 700; color: var(--ink-soft); background: var(--rule); padding: 2px 6px; border-radius: 5px; }
+
+.growth-badge { display: inline-flex; align-items: center; gap: 3px; font-family: var(--font-mono); font-weight: 600; padding: 2px 7px; border-radius: 5px; white-space: nowrap; font-size: 13px; }
+.growth-badge svg { width: 13px; height: 13px; }
+.growth-up { color: var(--sage); background: var(--sage-soft); }
+.growth-down { color: var(--red); background: var(--red-soft); }
+.growth-flat { color: var(--ink-faint); background: var(--rule); }
+
+/* ---------- Chart controls ---------- */
+.chart-controls { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.visibility-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.chip {
+  display: flex; align-items: center; gap: 6px; border: 1.5px solid var(--chip-color); background: var(--paper-raised);
+  border-radius: 999px; padding: 5px 12px 5px 8px; font-size: 12.5px; font-weight: 600; cursor: pointer;
+  font-family: var(--font-body); transition: opacity 0.15s, background 0.15s;
+}
+.chip-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--chip-color); }
+.chip-on { color: var(--ink); background: color-mix(in srgb, var(--chip-color) 12%, var(--paper-raised)); }
+.chip-off { opacity: 0.4; }
+.chip-off .chip-dot { background: var(--ink-faint); }
+
+.toggle-group { display: flex; gap: 14px; flex-wrap: wrap; }
+.gt-toggle { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--ink-soft); cursor: pointer; user-select: none; }
+.gt-toggle input { accent-color: var(--red); width: 15px; height: 15px; }
+
+/* ---------- Chart panel ---------- */
+.chart-panel { background: var(--paper-raised); border: 1.5px solid var(--rule-strong); border-radius: 12px; padding: 18px 14px 14px; }
+.chart-panel-header { display: flex; align-items: center; gap: 8px; padding: 0 4px 12px; color: var(--ink); }
+.chart-panel-header h3 { font-family: var(--font-display); font-size: 16px; font-weight: 600; margin: 0; }
+.chart-canvas-wrap { position: relative; height: 320px; }
+.empty-chart { padding: 40px 20px; text-align: center; color: var(--ink-faint); font-size: 13.5px; font-style: italic; font-family: var(--font-display); }
+
+/* ---------- Forms ---------- */
+.add-entry-form { display: flex; flex-direction: column; gap: 12px; }
+.add-entry-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field-wide { grid-column: 1 / -1; }
+.field span { font-size: 11.5px; font-weight: 700; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.04em; }
+.field input, .field select, .field textarea {
+  border: 1.5px solid var(--rule-strong); background: var(--paper); border-radius: 8px; padding: 9px 10px;
+  font-size: 14px; font-family: var(--font-body); color: var(--ink); width: 100%;
+}
+.field textarea { resize: vertical; min-height: 56px; font-family: var(--font-body); }
+.field input:focus, .field select:focus, .field textarea:focus { outline: 2px solid var(--red); outline-offset: 1px; }
+.field-hint { font-size: 11px; color: var(--ink-faint); font-style: italic; }
+
+.segmented { display: flex; border: 1.5px solid var(--rule-strong); border-radius: 8px; overflow: hidden; }
+.segmented button { flex: 1; border: none; background: var(--paper); padding: 9px 8px; font-size: 13px; font-weight: 600; color: var(--ink-soft); cursor: pointer; font-family: var(--font-body); }
+.segmented-active { background: var(--ink) !important; color: var(--paper) !important; }
+
+.form-error { display: flex; align-items: center; gap: 6px; color: var(--red); font-size: 12.5px; font-weight: 600; }
+.form-success { display: flex; align-items: center; gap: 6px; color: var(--sage); font-size: 12.5px; font-weight: 600; }
+
+.btn-primary, .btn-secondary, .btn-ghost {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px; border-radius: 8px;
+  font-weight: 700; font-size: 13.5px; cursor: pointer; font-family: var(--font-body); border: none;
+  padding: 10px 16px; transition: transform 0.1s, opacity 0.15s;
+}
+.btn-primary { background: var(--ink); color: var(--paper); align-self: flex-start; }
+.btn-primary:hover { opacity: 0.88; }
+.btn-secondary { background: var(--paper); color: var(--ink); border: 1.5px solid var(--rule-strong); white-space: nowrap; }
+.btn-secondary:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-secondary:not(:disabled):hover { border-color: var(--ink); }
+.btn-ghost { background: transparent; color: var(--ink-soft); border: 1.5px solid transparent; padding: 7px 11px; font-size: 12.5px; }
+.btn-ghost:hover { background: var(--rule); }
+.btn-danger-outline { background: var(--paper); color: var(--red); border: 1.5px solid var(--red); }
+.btn-danger-outline:hover { background: var(--red-soft); }
+
+/* ---------- Subject rows ---------- */
+.subject-rows { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+.subject-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; border: 1.5px solid var(--rule); flex-wrap: wrap; }
+.subject-visibility { border: none; background: transparent; cursor: pointer; padding: 4px; flex-shrink: 0; }
+.subject-dot, .subject-dot-sm { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
+.subject-dot-sm { width: 9px; height: 9px; }
+.subject-visibility-off { opacity: 0.5; }
+.subject-name { background: transparent; border: none; font-size: 14.5px; font-weight: 600; cursor: pointer; text-align: left; font-family: var(--font-body); color: var(--ink); flex: 1; padding: 4px; min-width: 80px; }
+.subject-name-input { flex: 1; border: 1.5px solid var(--red); border-radius: 6px; padding: 4px 8px; font-size: 14.5px; font-family: var(--font-body); min-width: 80px; }
+.subject-row-growth { flex-shrink: 0; }
+.subject-row-actions { display: flex; gap: 2px; flex-shrink: 0; }
+.icon-btn { border: none; background: transparent; padding: 6px; border-radius: 6px; cursor: pointer; color: var(--ink-soft); display: flex; align-items: center; }
+.icon-btn:hover { background: var(--rule); }
+.icon-btn-danger:hover { background: var(--red-soft); color: var(--red); }
+.icon-btn svg { width: 15px; height: 15px; }
+
+.subject-goal-input { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--ink-faint); }
+.subject-goal-input input { width: 52px; border: 1px solid var(--rule-strong); border-radius: 5px; padding: 3px 5px; font-family: var(--font-mono); font-size: 12px; background: var(--paper); }
+
+.color-picker-anchor { position: relative; }
+.color-picker {
+  position: absolute; top: calc(100% + 6px); right: 0; background: var(--paper-raised); border: 1.5px solid var(--rule-strong);
+  border-radius: 10px; padding: 12px; box-shadow: 0 8px 24px rgba(27,42,65,0.18); z-index: 40; width: 168px;
+}
+.color-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 10px; }
+.color-swatch { width: 24px; height: 24px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; padding: 0; }
+.color-swatch-active { border-color: var(--ink); transform: scale(1.1); }
+.color-custom { display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: var(--ink-soft); border-top: 1px solid var(--rule); padding-top: 8px; }
+.color-custom input { width: 32px; height: 24px; border: none; padding: 0; cursor: pointer; }
+
+.add-subject-form { display: flex; align-items: center; gap: 8px; border-top: 1.5px solid var(--rule); padding-top: 14px; flex-wrap: wrap; }
+.add-subject-form input { flex: 1; min-width: 140px; border: 1.5px solid var(--rule-strong); border-radius: 8px; padding: 9px 10px; font-size: 14px; font-family: var(--font-body); background: var(--paper); }
+.add-subject-form input:focus { outline: 2px solid var(--red); outline-offset: 1px; }
+
+/* ---------- Subject details / entry list ---------- */
+.subject-details { display: flex; flex-direction: column; gap: 8px; }
+.subject-detail { border: 1.5px solid var(--rule); border-radius: 8px; overflow: hidden; }
+.subject-detail-toggle { width: 100%; display: flex; align-items: center; gap: 8px; background: var(--paper); border: none; padding: 10px 12px; cursor: pointer; font-family: var(--font-body); color: var(--ink-soft); flex-wrap: wrap; }
+.subject-detail-name { font-weight: 700; color: var(--ink); flex: 1; text-align: left; min-width: 90px; }
+.subject-detail-stats { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.subject-detail-avg { font-family: var(--font-mono); font-size: 12px; color: var(--ink-faint); }
+.subject-detail-body { padding: 10px 14px 14px; border-top: 1px solid var(--rule); }
+
+.entry-filter { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+.entry-filter button { border: 1.5px solid var(--rule-strong); background: var(--paper-raised); border-radius: 999px; padding: 4px 11px; font-size: 11.5px; font-weight: 600; cursor: pointer; color: var(--ink-soft); font-family: var(--font-body); }
+.entry-filter button.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+
+.entry-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.entry-row { display: grid; grid-template-columns: 56px 56px 1fr 44px 24px; align-items: center; gap: 8px; padding: 7px 4px; border-bottom: 1px solid var(--rule); font-size: 12.5px; }
+.entry-row:last-child { border-bottom: none; }
+.entry-row-note { grid-column: 1 / -1; font-size: 11.5px; color: var(--ink-faint); font-style: italic; padding: 0 4px 6px 4px; border-bottom: 1px solid var(--rule); }
+.entry-date { font-family: var(--font-mono); color: var(--ink-faint); }
+.entry-type { font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 2px 6px; border-radius: 4px; text-align: center; }
+.entry-type-test { background: var(--sage-soft); color: var(--sage); }
+.entry-type-report { background: var(--red-soft); color: var(--red); }
+.entry-label { color: var(--ink-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.entry-value { font-family: var(--font-mono); font-weight: 700; text-align: right; }
+
+.empty-state-mini { color: var(--ink-faint); font-size: 13px; font-style: italic; font-family: var(--font-display); }
+
+/* ---------- Settings panel ---------- */
+.settings-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--rule); flex-wrap: wrap; }
+.settings-row:last-child { border-bottom: none; }
+.settings-row-label { font-size: 14px; font-weight: 600; }
+.settings-row-desc { font-size: 12px; color: var(--ink-faint); margin-top: 2px; max-width: 420px; }
+.scale-toggle { display: flex; border: 1.5px solid var(--rule-strong); border-radius: 8px; overflow: hidden; }
+.scale-toggle button { border: none; background: var(--paper); padding: 8px 14px; font-size: 13px; font-weight: 700; color: var(--ink-soft); cursor: pointer; font-family: var(--font-mono); }
+.scale-toggle button.active { background: var(--ink); color: var(--paper); }
+
+.import-export-row { display: flex; gap: 10px; flex-wrap: wrap; }
+input[type="file"] { display: none; }
+
+.scale-reference { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.scale-chip { font-family: var(--font-mono); font-size: 11px; background: var(--rule); padding: 3px 8px; border-radius: 5px; color: var(--ink-soft); }
+
+/* ---------- Footer ---------- */
+.gt-footer { text-align: center; padding: 16px; font-size: 11.5px; color: var(--ink-faint); font-family: var(--font-mono); }
+
+/* ---------- Toast ---------- */
+.gt-toast {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(20px);
+  background: var(--ink); color: var(--paper); padding: 10px 18px; border-radius: 8px; font-size: 13px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.25); z-index: 100; opacity: 0; transition: opacity 0.25s, transform 0.25s; pointer-events: none;
+  display: flex; align-items: center; gap: 8px;
+}
+.gt-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ---------- Modal (confirm dialogs) ---------- */
+.gt-modal-backdrop { position: fixed; inset: 0; background: rgba(27,42,65,0.4); display: flex; align-items: center; justify-content: center; z-index: 90; padding: 20px; }
+.gt-modal { background: var(--paper-raised); border-radius: 12px; padding: 20px; max-width: 360px; width: 100%; box-shadow: 0 16px 40px rgba(0,0,0,0.25); }
+.gt-modal h4 { margin: 0 0 8px; font-family: var(--font-display); font-size: 17px; }
+.gt-modal p { margin: 0 0 16px; font-size: 13.5px; color: var(--ink-soft); }
+.gt-modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+/* ---------- Icons (inline SVG via mask, simple line icons) ---------- */
+svg { display: block; }
+
+/* ---------- Mobile ---------- */
+@media (max-width: 640px) {
+  .gt-header-inner { padding: 12px 14px; }
+  .gt-brand h1 { font-size: 19px; }
+  .gt-brand p { display: none; }
+  .gt-main { padding: 16px 12px 60px; gap: 16px; }
+  .panel { padding: 14px; }
+  .add-entry-grid { grid-template-columns: 1fr 1fr; }
+  .entry-row { grid-template-columns: 48px 48px 1fr 38px 22px; font-size: 11.5px; }
+  .summary-strip { grid-template-columns: repeat(auto-fit, minmax(135px, 1fr)); }
+  .gt-tabs button span.label { display: none; }
+  .chart-panel { padding: 14px 8px 10px; }
+  .settings-row { flex-direction: column; align-items: flex-start; }
+}
+@media (max-width: 400px) {
+  .add-entry-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<header class="gt-header">
+  <div class="gt-header-inner">
+    <div class="gt-brand">
+      <span class="gt-brand-mark">&sect;</span>
+      <div>
+        <h1 data-i18n="brand.title">Gradebook</h1>
+        <p data-i18n="brand.subtitle">your grades, charted like a ticker</p>
+      </div>
+    </div>
+    <nav class="gt-tabs" id="tabNav">
+      <button data-tab="charts" class="active" data-tab-icon="grid" data-i18n-key="tabs.charts"><span class="tab-icon" data-icon="grid"></span><span class="label"></span></button>
+      <button data-tab="manage" data-tab-icon="pencil" data-i18n-key="tabs.manage"><span class="tab-icon" data-icon="pencil"></span><span class="label"></span></button>
+      <button data-tab="settings" data-tab-icon="settings" data-i18n-key="tabs.settings"><span class="tab-icon" data-icon="settings"></span><span class="label"></span></button>
+    </nav>
+    <div style="display:flex; gap:8px; align-items:center;">
+      <select id="langSelect" style="border:1px solid var(--rule-strong); padding:6px; border-radius:6px; font-family:var(--font-body);">
+        <option value="en">English</option>
+        <option value="fi">Suomi</option>
+      </select>
+    </div>
+  </div>
+</header>
+
+<div id="storageWarning" class="storage-warning" style="display:none;">
+  <span class="storage-icon" data-icon="alert"></span>
+  <span id="storageWarningText"></span>
+</div>
+
+<main class="gt-main" id="mainRoot"></main>
+
+<footer class="gt-footer" id="footerText">Saved automatically on this device.</footer>
+
+<div id="toast" class="gt-toast"></div>
+<div id="modalRoot"></div>
+
+<script>
+/* ======================================================================
+   ICONS — tiny inline SVG helpers (kept dependency-free)
+====================================================================== */
+function icon(name, size) {
+  size = size || 15;
+  const common = `width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"`;
+  const paths = {
+    grid: `<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>`,
+    pencil: `<path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>`,
+    settings: `<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/>`,
+    alert: `<path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12" y2="17.01"/>`,
+    plus: `<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>`,
+    trash: `<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>`,
+    x: `<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>`,
+    up: `<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>`,
+    down: `<polyline points="22 17 13.5 8.5 8.5 13.5 2 7"/><polyline points="16 17 22 17 22 11"/>`,
+    flat: `<line x1="5" y1="12" x2="19" y2="12"/>`,
+    palette: `<circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C22 6.012 17.461 2 12 2Z"/>`,
+    chevronDown: `<polyline points="6 9 12 15 18 9"/>`,
+    chevronRight: `<polyline points="9 18 15 12 9 6"/>`,
+    book: `<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>`,
+    file: `<path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5z"/><polyline points="14 2 14 8 20 8"/>`,
+    download: `<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>`,
+    upload: `<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>`,
+    target: `<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>`,
+    note: `<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>`,
+    check: `<polyline points="20 6 9 17 4 12"/>`,
+  };
+  return `<svg ${common}>${paths[name] || ''}</svg>`;
+}
+
+/* ======================================================================
+   TRANSLATIONS
+====================================================================== */
+const TRANSLATIONS = {
+  en: {
+    brand: { title: "Gradebook", subtitle: "your grades, charted" },
+    tabs: { charts: "Charts", manage: "Manage", settings: "Settings" },
+    storage: {
+      warning: "Storage isn't available right now — your changes won't be saved between sessions.",
+      footerSaved: "Saved automatically on this device. Contact 4nkanpaa@gmail.com for support.",
+      footerNotSaving: "Not saving — storage unavailable. Contact 4nkanpaa@gmail.com for support."
+    },
+    ui: {
+      logGrade: "Log a grade",
+      subjects: "Subjects",
+      add: "Add",
+      allEntries: "All entries",
+      newSubjectPlaceholder: "New subject — e.g. Chemistry",
+      addGradeBtn: "Add grade",
+      addSubjectBtn: "Add",
+      noSubjects: "No subjects yet. Go to Manage to add one.",
+      noEntries: "No entries in this filter.",
+      noEntriesForVisible: "No {type} entries yet for the visible subjects.",
+      testLabel: "Test",
+      reportLabel: "Report",
+      subjectPlaceholder: "New subject — e.g. Chemistry",
+      labelOptional: "Label (optional)",
+      noteOptional: "Note (optional)",
+      gradePlaceholderHundred: "e.g. 87",
+      gradePlaceholderFinnish: "e.g. 8.5 or 9+",
+      date: "Date",
+      subject: "Subject",
+      chart: "Chart",
+      exportJson: "Export JSON",
+      exportCsv: "Export CSV",
+      importJson: "Import JSON",
+      resetClearAll: "Clear all data",
+      importPromptTitle: "Replace all data?",
+      importPromptBody: "This file has {count} subject(s). Importing will replace everything currently in your gradebook.",
+      importConfirm: "Import & replace",
+      clearPromptTitle: "Clear all data?",
+      clearPromptBody: "This removes every subject and grade permanently. This cannot be undone.",
+      clearConfirm: "Clear everything",
+      deleteConfirm: "Delete subject",
+      deleteSubjectTitle: "Delete {name}?",
+      deleteSubjectBody: "This removes the subject and all {count} grade(s) attached to it. This cannot be undone.",
+      switchScaleTitle: "Switch grading scale?",
+      switchScaleBody: "Existing grades won't be converted or rescaled. New entries will use the new scale and range.",
+      switchScaleConfirm: "Switch scale",
+      exportSuccessJson: "Exported JSON backup",
+      exportSuccessCsv: "Exported CSV",
+      importSuccess: "Import complete",
+      importFail: "Couldn't read that file — is it a Gradebook export?",
+      addedSubjectToast: "Added {name}",
+      addedEntryToast: "Added {value} to {subject}",
+      deletedToast: "Deleted {name}",
+      clearedToast: "All data cleared.",
+      addedEntrySuccessForm: "Added {value} to {subject}",
+      cannotReadGrade: "Couldn't read that grade. Try formats like 8, 8.5, 8½, 9+, 9-",
+      enterNumericGrade: "Enter a numeric grade.",
+      gradeRangeError: "Grade should be between {min} and {max}.",
+      addSubjectFirst: "Add a subject first.",
+      pickDate: "Pick a date.",
+      toggleGoals: "Toggle goals",
+      toggleTrend: "Toggle trends",
+      toggleAverages: "Toggle averages",
+      testsQuizzes: "Tests & quizzes",
+      reportCard: "Report card",
+      backupSection: "Backup",
+      resetSection: "Reset",
+      scale: "Scale",
+    },
+    scaleHint: {
+      finnish: "Finnish scale 4–10. Try: 8, 8.5, 8½, 9+, 9-",
+      hundred: "Scale 0–100."
+    },
+    scaleReference: "10 excellent · 9 very good · 8 good · 7 satisfactory · 6 moderate · 5 adequate · 4 fail · 9+ = 9.25 · 9½ = 9.5 · 10- = 9.75",
+    confirm: { cancel: "Cancel", confirm: "Confirm" },
+    filters: { all: "All", tests: "Tests", reports: "Report card" },
+    toast: { exported: "Exported", imported: "Imported" },
+    descriptors: {
+      finnish: {
+        10: "excellent",
+        9: "very good",
+        8: "good",
+        7: "satisfactory",
+        6: "moderate",
+        5: "adequate",
+        4: "fail",
+      },
+    },
+  },
+  fi: {
+    brand: { title: "Gradebook", subtitle: "arvosanasi, kaavioina" },
+    tabs: { charts: "Kaaviot", manage: "Hallitse", settings: "Asetukset" },
+    storage: {
+      warning: "Tallennustila ei ole käytettävissä juuri nyt — muutoksiasi ei tallenneta istuntojen välillä.",
+      footerSaved: "Tallennettu automaattisesti laitteellesi. Ota yhteyttä osoitteeseen 4nkanpaa@gmail.com saadaksesi tukea.",
+      footerNotSaving: "Ei tallennettu — tallennustila ei käytettävissä. Ota yhteyttä osoitteeseen 4nkanpaa@gmail.com saadaksesi tukea.",
+    },
+    ui: {
+      logGrade: "Kirjaa arvosana",
+      subjects: "Aineet",
+      add: "Lisää",
+      allEntries: "Kaikki merkinnät",
+      newSubjectPlaceholder: "Uusi aine — esim. Kemia",
+      addGradeBtn: "Lisää arvosana",
+      addSubjectBtn: "Lisää",
+      noSubjects: "Ei aineita vielä. Mene Hallitse-välilehdelle lisätäksesi.",
+      noEntries: "Ei merkintöjä tällä suodattimella.",
+      noEntriesForVisible: "Ei {type}-merkintöjä näkyville aiheille.",
+      testLabel: "Koe",
+      reportLabel: "Arviointi",
+      subjectPlaceholder: "Uusi aine — esim. Kemia",
+      labelOptional: "Nimike (valinnainen)",
+      noteOptional: "Muistiinpano (valinnainen)",
+      gradePlaceholderHundred: "esim. 87",
+      gradePlaceholderFinnish: "esim. 8.5 tai 9+",
+      date: "Päivämäärä",
+      subject: "Aine",
+      chart: "Kaavio",
+      exportJson: "Vie JSON",
+      exportCsv: "Vie CSV",
+      importJson: "Tuo JSON",
+      resetClearAll: "Tyhjennä kaikki tiedot",
+      importPromptTitle: "Korvataanko kaikki tiedot?",
+      importPromptBody: "Tiedostossa on {count} ainetta. Tuonti korvaa kaikki nykyiset tiedot.",
+      importConfirm: "Tuo ja korvaa",
+      clearPromptTitle: "Tyhjennetäänkö kaikki tiedot?",
+      clearPromptBody: "Tämä poistaa kaikki aineet ja arvosanat pysyvästi. Tätä ei voi perua.",
+      clearConfirm: "Tyhjennä kaikki",
+      deleteConfirm: "Poista aine",
+      deleteSubjectTitle: "Poistetaanko {name}?",
+      deleteSubjectBody: "Tämä poistaa aineen ja siihen kuuluvat {count} arvosanaa. Tätä ei voi perua.",
+      switchScaleTitle: "Vaihdetaanko arviointiasteikko?",
+      switchScaleBody: "Nykyisiä arvosanoja ei muunneta eikä skaala muutu. Uudet merkinnät käyttävät uutta asteikkoa.",
+      switchScaleConfirm: "Vaihda asteikko",
+      exportSuccessJson: "JSON-varmuuskopio viety",
+      exportSuccessCsv: "CSV viety",
+      importSuccess: "Tuonti valmis",
+      importFail: "Tiedostoa ei voitu lukea — varmista, että lähetit juuri Gradebook-tiedoston.",
+      addedSubjectToast: "Lisätty {name}",
+      addedEntryToast: "Lisätty {value} aineelle {subject}",
+      deletedToast: "Poistettu {name}",
+      clearedToast: "Kaikki tiedot tyhjennetty.",
+      addedEntrySuccessForm: "Lisätty {value} aineelle {subject}",
+      cannotReadGrade: "Virheellinen arvosana. Kokeile muotoja 8, 8.5, 8½, 9+, 9-",
+      enterNumericGrade: "Syötä numeerinen arvosana.",
+      gradeRangeError: "Arvosanan tulee olla välillä {min}–{max}.",
+      addSubjectFirst: "Lisää aine ensin.",
+      pickDate: "Valitse päivämäärä.",
+      toggleGoals: "Tavoitteet",
+      toggleTrend: "Trendi",
+      toggleAverages: "Keskiarvot",
+      testsQuizzes: "Kokeet",
+      reportCard: "Arviointi",
+      backupSection: "Varmuuskopio",
+      resetSection: "Nollaa",
+      scale: "Asteikko",
+    },
+    scaleHint: {
+      finnish: "Suomalainen asteikko 4–10. Esim: 8, 8.5, 8½, 9+, 9-",
+      hundred: "Asteikko 0–100."
+    },
+    scaleReference: "10 erinomainen · 9 kiitettävä · 8 hyvä · 7 tyydyttävä · 6 kohtalainen · 5 välttävä · 4 hylätty · 9+ = 9.25 · 9½ = 9.5 · 10- = 9.75",
+    confirm: { cancel: "Peruuta", confirm: "Vahvista" },
+    filters: { all: "Kaikki", tests: "Kokeet", reports: "Arviointi" },
+    toast: { exported: "Viety", imported: "Tuotu" },
+    descriptors: {
+      finnish: {
+        10: "erinomainen",
+        9: "kiitettävä",
+        8: "hyvä",
+        7: "tyydyttävä",
+        6: "kohtalainen",
+        5: "välttävä",
+        4: "hylätty",
+      },
+  },
+}
+};
+
+function t(key, vars) {
+  const lang = state.lang || 'en';
+  const parts = key.split(".");
+  let cur = TRANSLATIONS[lang] || TRANSLATIONS.en;
+  for (const p of parts) {
+    cur = cur && cur[p];
+    if (cur === undefined) break;
+  }
+  let str = cur !== undefined ? String(cur) : key;
+  if (vars) {
+    Object.keys(vars).forEach(k => {
+      str = str.replace(new RegExp(`\\{${k}\\}`, "g"), String(vars[k]));
+    });
+  }
+  return str;
+}
+
+/* ======================================================================
+   CONSTANTS
+====================================================================== */
+const COLOR_SWATCHES = ["#C1432B","#5C7A5C","#3D5A80","#A8763E","#7B5EA7","#B8722E","#2F6B5E","#9C4B6E","#4A6B8A","#8A5A3C"];
+const TYPES = { TEST: "test", REPORT: "report" };
+const STORAGE_KEY = "gradebook:v2";
+const SCALES = {
+  hundred: { id: "hundred", label: "0–100", min: 0, max: 100, step: 0.1 },
+  finnish: { id: "finnish", label: "Finnish 4–10", min: 4, max: 10, step: 0.25 },
+};
+
+const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+const todayISO = () => new Date().toISOString().slice(0, 10);
+const fmtDate = (iso) => {
+  const d = new Date(iso + "T00:00:00");
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+};
+const escapeHtml = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+
+/* ======================================================================
+   FINNISH GRADE PARSING
+====================================================================== */
+function parseFinnishGrade(raw) {
+  if (raw === null || raw === undefined) return null;
+  let s = String(raw).trim();
+  if (!s) return null;
+  s = s.replace(",", ".");           
+  s = s.replace(/\s+/g, "");          
+  let raw2 = String(raw).trim().replace(",", ".");
+  let m;
+  if ((m = raw2.match(/^(\d{1,2})\s*1\/2$/))) {
+    return parseFloat(m[1]) + 0.5;
+  }
+  if (/^\d{1,2}(\.\d{1,2})?$/.test(s)) {
+    return parseFloat(s);
+  }
+  if ((m = s.match(/^(\d{1,2})½$/))) {
+    return parseFloat(m[1]) + 0.5;
+  }
+  if ((m = s.match(/^(\d{1,2})\+$/))) {
+    return parseFloat(m[1]) + 0.25;
+  }
+  if ((m = s.match(/^(\d{1,2})[-–]$/))) {
+    return parseFloat(m[1]) - 0.25;
+  }
+  return null;
+}
+
+function formatFinnishGrade(value) {
+  if (value === null || value === undefined || Number.isNaN(value)) return "—";
+  const whole = Math.floor(value);
+  const frac = Math.round((value - whole) * 100) / 100;
+  if (frac === 0) return String(whole);
+  if (Math.abs(frac - 0.25) < 0.001) return `${whole}+`;
+  if (Math.abs(frac - 0.5) < 0.001) return `${whole}½`;
+  if (Math.abs(frac - 0.75) < 0.001) return `${whole + 1}-`;
+  return value.toFixed(2).replace(/\.?0+$/, "");
+}
+
+function finnishDescriptor(value) {
+  if (value === null || value === undefined || Number.isNaN(value)) return "";
+  const r = Math.round(value);
+  const key = `descriptors.finnish.${r}`;
+  const localized = t(key);
+  // fallback to English descriptor if localization missing
+  if (localized === key) {
+    const enDesc = (TRANSLATIONS.en && TRANSLATIONS.en.descriptors && TRANSLATIONS.en.descriptors.finnish && TRANSLATIONS.en.descriptors.finnish[String(r)]) || "";
+    return enDesc || "";
+  }
+  return localized;
+}
+
+/* ======================================================================
+   STATE
+====================================================================== */
+const state = {
+  subjects: [],
+  visibleIds: new Set(),
+  showAverages: true,
+  showGoals: true,
+  showTrend: false,
+  scale: "hundred",
+  tab: "charts",
+  loaded: false,
+  hasStorage: (typeof window !== "undefined") && (!!window.storage || (function(){ try { localStorage.setItem("__gt_test","1"); localStorage.removeItem("__gt_test"); return true;} catch(e){return false;} })()),
+  lang: (function(){ try { const v = (window.localStorage && localStorage.getItem(STORAGE_KEY + ':lang')) || null; return v || 'en'; } catch(e){ return 'en'; } })(),
+};
+
+const charts = {}; // canvas chart instances by panel id
+
+/* ======================================================================
+   DEFAULT DATA
+====================================================================== */
+function makeDefaultSubjects(scale) {
+  if (scale === "finnish") {
+    return [
+      { id: uid(), name: "Mathematics", color: "#3D5A80", goal: 9, entries: [
+        { id: uid(), date: "2026-01-15", value: 7, type: TYPES.TEST, label: "Quiz 1", note: "" },
+        { id: uid(), date: "2026-02-02", value: 8, type: TYPES.TEST, label: "Quiz 2", note: "" },
+        { id: uid(), date: "2026-02-20", value: 7.5, type: TYPES.TEST, label: "Midterm", note: "Careful with derivatives" },
+        { id: uid(), date: "2026-03-10", value: 8.5, type: TYPES.TEST, label: "Quiz 3", note: "" },
+        { id: uid(), date: "2026-01-31", value: 7, type: TYPES.REPORT, label: "Term 1", note: "" },
+        { id: uid(), date: "2026-03-31", value: 8, type: TYPES.REPORT, label: "Term 2", note: "" },
+      ]},
+      { id: uid(), name: "Biology", color: "#5C7A5C", goal: 9, entries: [
+        { id: uid(), date: "2026-01-20", value: 9, type: TYPES.TEST, label: "Lab report", note: "" },
+        { id: uid(), date: "2026-02-12", value: 8, type: TYPES.TEST, label: "Unit test", note: "" },
+        { id: uid(), date: "2026-03-05", value: 9.5, type: TYPES.TEST, label: "Quiz", note: "" },
+        { id: uid(), date: "2026-01-31", value: 8, type: TYPES.REPORT, label: "Term 1", note: "" },
+        { id: uid(), date: "2026-03-31", value: 9, type: TYPES.REPORT, label: "Term 2", note: "" },
+      ]},
+    ];
+  }
+  return [
+    { id: uid(), name: "Mathematics", color: "#3D5A80", goal: 90, entries: [
+      { id: uid(), date: "2026-01-15", value: 78, type: TYPES.TEST, label: "Quiz 1", note: "" },
+      { id: uid(), date: "2026-02-02", value: 82, type: TYPES.TEST, label: "Quiz 2", note: "" },
+      { id: uid(), date: "2026-02-20", value: 75, type: TYPES.TEST, label: "Midterm", note: "Need to review chapter 4" },
+      { id: uid(), date: "2026-03-10", value: 88, type: TYPES.TEST, label: "Quiz 3", note: "" },
+      { id: uid(), date: "2026-01-31", value: 79, type: TYPES.REPORT, label: "Term 1", note: "" },
+      { id: uid(), date: "2026-03-31", value: 84, type: TYPES.REPORT, label: "Term 2", note: "" },
+    ]},
+    { id: uid(), name: "Biology", color: "#5C7A5C", goal: 95, entries: [
+      { id: uid(), date: "2026-01-20", value: 91, type: TYPES.TEST, label: "Lab report", note: "" },
+      { id: uid(), date: "2026-02-12", value: 86, type: TYPES.TEST, label: "Unit test", note: "" },
+      { id: uid(), date: "2026-03-05", value: 93, type: TYPES.TEST, label: "Quiz", note: "" },
+      { id: uid(), date: "2026-01-31", value: 89, type: TYPES.REPORT, label: "Term 1", note: "" },
+      { id: uid(), date: "2026-03-31", value: 90, type: TYPES.REPORT, label: "Term 2", note: "" },
+    ]},
+  ];
+}
+
+/* ======================================================================
+   PERSISTENCE
+====================================================================== */
+async function loadState() {
+  try {
+    if (!state.hasStorage) return null;
+    if (window.storage) {
+      const res = await window.storage.get(STORAGE_KEY, false);
+      if (!res || !res.value) return null;
+      return JSON.parse(res.value);
+    } else {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : null;
+    }
+  } catch (e) { return null; }
+}
+let saveTimer = null;
+function persist() {
+  if (!state.hasStorage) return;
+  if (saveTimer) clearTimeout(saveTimer);
+  saveTimer = setTimeout(async () => {
+    const payload = JSON.stringify({
+      subjects: state.subjects,
+      showAverages: state.showAverages,
+      showGoals: state.showGoals,
+      showTrend: state.showTrend,
+      scale: state.scale,
+      visibleIds: Array.from(state.visibleIds),
+    });
+    try {
+      if (window.storage) {
+        await window.storage.set(STORAGE_KEY, payload, false);
+      } else {
+        localStorage.setItem(STORAGE_KEY, payload);
+      }
+      try { localStorage.setItem(STORAGE_KEY + ':lang', state.lang); } catch (e) {}
+    } catch (e) { /* ignore */ }
+  }, 350);
+}
+
+/* ======================================================================
+   GRADE HELPERS
+====================================================================== */
+function scaleDef() { return SCALES[state.scale]; }
+
+function clampToScale(n) {
+  const sc = scaleDef();
+  return Math.max(sc.min, Math.min(sc.max, n));
+}
+
+function parseGradeInput(raw) {
+  if (state.scale === "finnish") return parseFinnishGrade(raw);
+  const n = parseFloat(String(raw).replace(",", "."));
+  return Number.isNaN(n) ? null : n;
+}
+
+function formatGrade(value) {
+  if (value === null || value === undefined) return "—";
+  if (state.scale === "finnish") return formatFinnishGrade(value);
+  return Number.isInteger(value) ? String(value) : value.toFixed(1);
+}
+
+function letterOrDescriptor(value) {
+  if (value === null || value === undefined) return "";
+  if (state.scale === "finnish") return finnishDescriptor(value);
+  let letter = "F";
+  if (value >= 97) letter = "A+"; else if (value >= 93) letter = "A"; else if (value >= 90) letter = "A-";
+  else if (value >= 87) letter = "B+"; else if (value >= 83) letter = "B"; else if (value >= 80) letter = "B-";
+  else if (value >= 77) letter = "C+"; else if (value >= 73) letter = "C"; else if (value >= 70) letter = "C-";
+  else if (value >= 67) letter = "D+"; else if (value >= 63) letter = "D"; else if (value >= 60) letter = "D-";
+  return letter;
+}
+
+function average(entries) {
+  if (!entries.length) return null;
+  return entries.reduce((s, e) => s + e.value, 0) / entries.length;
+}
+
+function getGrowth(entries) {
+  const sorted = [...entries].sort((a, b) => a.date.localeCompare(b.date));
+  if (sorted.length < 2) return { delta: null, pct: null, direction: "flat" };
+  const last = sorted[sorted.length - 1].value;
+  const prev = sorted[sorted.length - 2].value;
+  const delta = last - prev;
+  const pct = prev !== 0 ? (delta / prev) * 100 : 0;
+  const direction = delta > 0.001 ? "up" : delta < -0.001 ? "down" : "flat";
+  return { delta, pct, direction };
+}
+
+function linearRegression(points) {
+  const n = points.length;
+  if (n < 2) return null;
+  let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
+  points.forEach((p) => { sumX += p.x; sumY += p.y; sumXY += p.x * p.y; sumXX += p.x * p.x; });
+  const denom = n * sumXX - sumX * sumX;
+  if (denom === 0) return null;
+  const slope = (n * sumXY - sumX * sumY) / denom;
+  const intercept = (sumY - slope * sumX) / n;
+  return { slope, intercept };
+}
+
+function growthBadgeHtml(entries, size) {
+  const { delta, pct, direction } = getGrowth(entries);
+  const fontSize = size === "sm" ? 11 : 13;
+  if (delta === null) return `<span class="growth-badge growth-flat" style="font-size:${fontSize}px">—</span>`;
+  const iconName = direction === "up" ? "up" : direction === "down" ? "down" : "flat";
+  const cls = direction === "up" ? "growth-up" : direction === "down" ? "growth-down" : "growth-flat";
+  const sign = delta > 0 ? "+" : "";
+  const deltaStr = state.scale === "finnish" ? delta.toFixed(2).replace(/0$/, "").replace(/\.$/, "") : delta.toFixed(1);
+  return `<span class="growth-badge ${cls}" style="font-size:${fontSize}px">${icon(iconName, size === "sm" ? 12 : 14)}${sign}${deltaStr} (${sign}${pct.toFixed(1)}%)</span>`;
+}
+
+/* ======================================================================
+   TOAST
+====================================================================== */
+let toastTimer = null;
+function showToast(msg) {
+  const el = document.getElementById("toast");
+  el.innerHTML = msg;
+  el.classList.add("show");
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove("show"), 2400);
+}
+
+/* ======================================================================
+   MODAL (confirm)
+====================================================================== */
+function confirmModal({ title, body, confirmLabel, danger, onConfirm }) {
+  const root = document.getElementById("modalRoot");
+  root.innerHTML = `
+    <div class="gt-modal-backdrop" id="modalBackdrop">
+      <div class="gt-modal">
+        <h4>${escapeHtml(title)}</h4>
+        <p>${escapeHtml(body)}</p>
+        <div class="gt-modal-actions">
+          <button class="btn-secondary" id="modalCancel">${escapeHtml(t('confirm.cancel'))}</button>
+          <button class="${danger ? 'btn-danger-outline' : 'btn-primary'}" id="modalConfirm">${escapeHtml(confirmLabel || t('confirm.confirm'))}</button>
+        </div>
+      </div>
+    </div>`;
+  document.getElementById("modalCancel").onclick = () => { root.innerHTML = ""; };
+  document.getElementById("modalBackdrop").addEventListener("click", (e) => {
+    if (e.target.id === "modalBackdrop") root.innerHTML = "";
+  });
+  document.getElementById("modalConfirm").onclick = () => { root.innerHTML = ""; onConfirm(); };
+}
+
+/* ======================================================================
+   DOM LOCALIZATION HELPERS
+====================================================================== */
+function localizeDom(root = document) {
+  root.querySelectorAll('[data-i18n-key]').forEach((el) => {
+    const key = el.dataset.i18nKey;
+    const text = t(key);
+    const iconName = el.dataset.tabIcon;
+    if (iconName) {
+      el.innerHTML = icon(iconName, 15) + `<span class="label">${escapeHtml(text)}</span>`;
+    } else {
+      el.textContent = text;
+    }
+  });
+  root.querySelectorAll('[data-i18n]').forEach((el) => {
+    const key = el.dataset.i18n;
+    el.textContent = t(key);
+  });
+}
+
+/* ======================================================================
+   RENDER: TAB NAV
+====================================================================== */
+document.getElementById("tabNav").addEventListener("click", (e) => {
+  const btn = e.target.closest("button[data-tab]");
+  if (!btn) return;
+  state.tab = btn.dataset.tab;
+  document.querySelectorAll("#tabNav button").forEach((b) => b.classList.toggle("active", b === btn));
+  render();
+});
+
+/* ======================================================================
+   RENDER: MAIN ROUTER
+====================================================================== */
+function render() {
+  const root = document.getElementById("mainRoot");
+  if (state.tab === "charts") root.innerHTML = renderChartsTab();
+  else if (state.tab === "manage") root.innerHTML = renderManageTab();
+  else root.innerHTML = renderSettingsTab();
+
+  attachHandlers();
+  if (state.tab === "charts") renderCharts();
+  localizeDom(root);
+}
+
+/* ======================================================================
+   RENDER: CHARTS TAB
+====================================================================== */
+function renderChartsTab() {
+  const sc = scaleDef();
+  return `
+    <div class="summary-strip">
+      ${state.subjects.map(renderSummaryCard).join("") || `<p class="empty-state-mini">${escapeHtml(t('ui.noSubjects'))}</p>`}
+    </div>
+
+    <div class="chart-controls">
+      <div class="visibility-chips">
+        ${state.subjects.map((s) => `
+          <button class="chip ${state.visibleIds.has(s.id) ? 'chip-on' : 'chip-off'}" style="--chip-color:${s.color}" data-action="toggle-visible" data-id="${s.id}">
+            <span class="chip-dot"></span>${escapeHtml(s.name)}
+          </button>
+        `).join("")}
+      </div>
+      <div class="toggle-group">
+        <label class="gt-toggle"><input type="checkbox" id="toggleAverages" ${state.showAverages ? "checked" : ""}/> <span>${escapeHtml(t('ui.toggleAverages'))}</span></label>
+        <label class="gt-toggle"><input type="checkbox" id="toggleGoals" ${state.showGoals ? "checked" : ""}/> <span>${escapeHtml(t('ui.toggleGoals'))}</span></label>
+        
+      </div>
+    </div>
+
+    ${renderChartPanel("test", t('ui.testsQuizzes'), "book")}
+    ${renderChartPanel("report", t('ui.reportCard'), "file")}
+  `;
+}
+
+function renderSummaryCard(s) {
+  const avg = average(s.entries);
+  const goalLine = s.goal !== null && s.goal !== undefined
+    ? `<span class="summary-card-goal">${icon("target", 11)} ${escapeHtml(t('ui.testsQuizzes'))} ${formatGrade(s.goal)}</span>` : "";
+  return `
+    <div class="summary-card" style="--accent:${s.color}">
+      <div class="summary-card-top"><span class="subject-dot-sm" style="background:${s.color}"></span>${escapeHtml(s.name)}</div>
+      <div class="summary-card-mid">
+        <span class="summary-card-avg">${formatGrade(avg)}</span>
+        <span class="letter-grade">${escapeHtml(letterOrDescriptor(avg))}</span>
+      </div>
+      ${growthBadgeHtml(s.entries)}
+      ${goalLine}
+    </div>`;
+}
+
+function renderChartPanel(type, title, iconName) {
+  return `
+    <div class="chart-panel">
+      <div class="chart-panel-header">${icon(iconName, 18)}<h3>${escapeHtml(title)}</h3></div>
+      <div class="chart-canvas-wrap" id="chartWrap-${type}">
+        <canvas id="chart-${type}"></canvas>
+      </div>
+    </div>`;
+}
+
+/* ======================================================================
+   CHART RENDERING (Chart.js)
+====================================================================== */
+function buildSeries(subject, type) {
+  return subject.entries
+    .filter((e) => e.type === type)
+    .sort((a, b) => a.date.localeCompare(b.date));
+}
+
+function renderCharts() {
+  ["test", "report"].forEach((type) => renderOneChart(type));
+}
+
+/* Add a visible error overlay and global handlers so runtime errors are shown */
+(function attachGlobalErrorHandlers() {
+  const overlay = document.createElement("div");
+  overlay.id = "gt-error-overlay";
+  overlay.style = "position:fixed;inset:12px;z-index:9999;padding:18px;background:#111;color:#fff;border-radius:8px;overflow:auto;display:none;font-family:monospace;font-size:13px;line-height:1.3;white-space:pre-wrap;";
+  document.addEventListener("DOMContentLoaded", () => document.body.appendChild(overlay));
+  function showErr(msg, stack) {
+    const body = `${msg}${stack ? "\n\n" + stack : ""}`;
+    overlay.textContent = "JavaScript error — check console\n\n" + body;
+    overlay.style.display = "block";
+    console.error("GT ERROR:", msg, stack);
+  }
+  window.__gt_showError = showErr;
+  window.addEventListener("error", (ev) => { try { ev.preventDefault(); showErr(ev.message || String(ev), ev.error && ev.error.stack); } catch(e) {/*ignore*/} });
+  window.addEventListener("unhandledrejection", (ev) => { try { ev.preventDefault(); const r = ev.reason; showErr(String(r), r && r.stack); } catch(e) {/*ignore*/} });
+})();
+
+/* renderOneChart: defensive, dynamic Chart.js loader, safe callbacks */
+function renderOneChart(type) {
+  try {
+    const wrap = document.getElementById(`chartWrap-${type}`);
+    if (!wrap) return;
+
+    let canvas = wrap.querySelector("canvas");
+    if (!canvas) {
+      wrap.innerHTML = `<canvas id="chart-${type}"></canvas>`;
+      canvas = document.getElementById(`chart-${type}`);
+    }
+
+    const visibleSubjects = state.subjects.filter((s) => state.visibleIds.has(s.id));
+    const anyData = visibleSubjects.some((s) => buildSeries(s, type).length > 0);
+
+    if (charts[type]) { try { charts[type].destroy(); } catch(e){}; charts[type] = null; }
+
+    if (!anyData) {
+      wrap.innerHTML = `<div class="empty-chart">${escapeHtml(t('ui.noEntriesForVisible', { type: t(type === 'test' ? 'ui.testsQuizzes' : 'ui.reportCard') }))}</div>`;
+      return;
+    }
+
+    const ctx = canvas.getContext && canvas.getContext("2d");
+    if (!ctx) {
+      console.error("Canvas 2D context unavailable", { type, ctx });
+      return;
+    }
+
+    // dynamic loader for Chart.js (tries several CDNs)
+    if (typeof Chart === "undefined") {
+      const scriptId = "gt-chartjs";
+      const CDNS = [
+        "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js",
+        "https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js",
+      ];
+      if (!document.querySelector(`[data-gt-loader="${scriptId}"]`)) {
+        let attempt = 0;
+        const tryLoad = () => {
+          if (attempt >= CDNS.length) {
+            showToast(`${icon("alert",14)} Could not load Chart.js`);
+            console.error("Failed to load Chart.js from CDNs:", CDNS);
+            return;
+          }
+          const s = document.createElement("script");
+          s.setAttribute("data-gt-loader", scriptId);
+          s.src = CDNS[attempt++];
+          s.async = true;
+          s.onload = () => {
+            console.log("Chart.js loaded from", s.src);
+            if (typeof Chart !== "undefined") {
+              try { renderOneChart(type); } catch (e) { console.error(e); }
+            } else {
+              tryLoad();
+            }
+          };
+          s.onerror = () => {
+            console.warn("Failed loading Chart.js from", s.src);
+            s.remove();
+            tryLoad();
+          };
+          document.head.appendChild(s);
+        };
+        tryLoad();
+      } else {
+        setTimeout(() => { try { renderOneChart(type); } catch (e) { console.error(e); } }, 400);
+      }
+      return;
+    }
+
+    // build unified date axis
+    const dateSet = new Set();
+    visibleSubjects.forEach((s) => buildSeries(s, type).forEach((e) => dateSet.add(e.date)));
+    const dates = Array.from(dateSet).sort();
+
+    const datasets = [];
+
+    visibleSubjects.forEach((s) => {
+      const series = buildSeries(s, type);
+      const byDate = {};
+      series.forEach((e) => { byDate[e.date] = e; });
+      const dataPoints = dates.map((d) => (byDate[d] ? byDate[d].value : null));
+
+      datasets.push({
+        label: s.name,
+        data: dataPoints,
+        borderColor: s.color,
+        backgroundColor: s.color,
+        pointRadius: dataPoints.map((v) => (v === null ? 0 : 3.5)),
+        pointHoverRadius: 5.5,
+        borderWidth: 2.5,
+        spanGaps: true,
+        tension: 0.3,
+        meta: dates.map((d) => byDate[d] || null),
+        order: 1,
+      });
+
+      if (state.showAverages && series.length) {
+        const avg = average(series);
+        datasets.push({
+          label: `${s.name} avg`,
+          data: dates.map(() => avg),
+          borderColor: s.color,
+          borderDash: [5, 4],
+          borderWidth: 1.5,
+          pointRadius: 0,
+          spanGaps: true,
+          isReference: true,
+          order: 2,
+        });
+      }
+
+      if (state.showGoals && s.goal !== null && s.goal !== undefined && series.length) {
+        datasets.push({
+          label: `${s.name} goal`,
+          data: dates.map(() => s.goal),
+          borderColor: s.color,
+          borderDash: [2, 3],
+          borderWidth: 1.25,
+          pointRadius: 0,
+          spanGaps: true,
+          isReference: true,
+          order: 3,
+        });
+      }
+
+ 
+    });
+
+    const sc = scaleDef();
+
+    // safe callbacks to avoid runtime exceptions inside Chart.js
+    const safeTickCallback = function(value, index) {
+      const i = (typeof index === "number") ? index : value;
+      const d = (dates && dates[i]) ? dates[i] : null;
+      return d ? fmtDate(d) : "";
+    };
+    const safeTooltipTitle = function(items) {
+      if (!items || !items.length) return "";
+      const idx = items[0] && typeof items[0].dataIndex === "number" ? items[0].dataIndex : null;
+      const d = (idx !== null && dates && dates[idx]) ? dates[idx] : null;
+      return d ? fmtDate(d) : "";
+    };
+    const safeTooltipLabel = function(item) {
+      const meta = item && item.dataset && item.dataset.meta ? item.dataset.meta[item.dataIndex] : null;
+      const y = item && item.parsed && typeof item.parsed.y !== "undefined" ? item.parsed.y : (item && typeof item.raw !== "undefined" ? item.raw : null);
+      let label = item && item.dataset && item.dataset.label ? item.dataset.label : "";
+      let line = `${label}: ${formatGrade(y)}`;
+      if (meta && meta.label) line += ` — ${meta.label}`;
+      return line;
+    };
+    const safeTooltipAfter = function(item) {
+      const meta = item && item.dataset && item.dataset.meta ? item.dataset.meta[item.dataIndex] : null;
+      return meta && meta.note ? `note: ${meta.note}` : undefined;
+    };
+
+    charts[type] = new Chart(ctx, {
+      type: "line",
+      data: { labels: dates, datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: "nearest", intersect: false },
+        scales: {
+          x: {
+            ticks: { font: { family: "monospace", size: 11 }, color: "#8C95A6", callback: safeTickCallback },
+            grid: { color: "#E8E1D2", drawTicks: false },
+            border: { color: "#D8CFB8" },
+          },
+          y: {
+            min: sc.min, max: sc.max,
+            ticks: { font: { family: "monospace", size: 11 }, color: "#8C95A6" },
+            grid: { color: "#E8E1D2" },
+            border: { display: false },
+          },
+        },
+        plugins: {
+          legend: {
+            labels: {
+              filter: (item) => !item.text.endsWith(" avg") && !item.text.endsWith(" goal") && !item.text.endsWith(" trend"),
+              font: { family: "monospace", size: 12 },
+              color: "#44546B",
+            },
+          },
+          tooltip: {
+            filter: (item) => !item.dataset.isReference,
+            backgroundColor: "#1B2A41",
+            titleFont: { family: "monospace", size: 11 },
+            bodyFont: { size: 12 },
+            padding: 10,
+            callbacks: {
+              title: safeTooltipTitle,
+              label: safeTooltipLabel,
+              afterLabel: safeTooltipAfter,
+            },
+          },
+        },
+      },
+    });
+  } catch (err) {
+    window.__gt_showError && window.__gt_showError(err.message || String(err), err && err.stack);
+    console.error(err);
+  }
+}
+
+/* ======================================================================
+   RENDER: MANAGE TAB
+====================================================================== */
+function renderManageTab() {
+  return `
+    <section class="panel">
+      <h2 class="panel-title">${escapeHtml(t('ui.logGrade'))}</h2>
+      ${renderAddEntryForm()}
+    </section>
+
+    <section class="panel">
+      <h2 class="panel-title">${escapeHtml(t('ui.subjects'))}</h2>
+      <div class="subject-rows">
+        ${state.subjects.map(renderSubjectRow).join("")}
+      </div>
+      <form id="addSubjectForm" class="add-subject-form">
+        <span class="subject-dot-sm" id="nextColorDot" style="background:${nextColor()}"></span>
+        <input type="text" id="newSubjectName" AutoCompleteType=false placeholder="${escapeHtml(t('ui.newSubjectPlaceholder'))}" />
+        <button type="submit" class="btn-secondary">${icon("plus", 14)} ${escapeHtml(t('ui.add'))}</button>
+      </form>
+    </section>
+
+    <section class="panel">
+      <h2 class="panel-title">${escapeHtml(t('ui.allEntries'))}</h2>
+      ${state.subjects.length === 0 ? `<p class="empty-state-mini">${escapeHtml(t('ui.noSubjects'))}</p>` :
+        `<div class="subject-details">${state.subjects.map(renderSubjectDetail).join("")}</div>`}
+    </section>
+  `;
+}
+
+function nextColor() {
+  const used = state.subjects.map((s) => s.color);
+  return COLOR_SWATCHES.find((c) => !used.includes(c)) || COLOR_SWATCHES[used.length % COLOR_SWATCHES.length];
+}
+
+function renderAddEntryForm() {
+  if (!state.subjects.length) {
+    return `<div class="empty-state-mini"><p>${escapeHtml(t('ui.noSubjects'))}</p></div>`;
+  }
+  const sc = scaleDef();
+  const hint = state.scale === "finnish"
+    ? t('scaleHint.finnish')
+    : t('scaleHint.hundred');
+  return `
+    <form id="addEntryForm" class="add-entry-form">
+      <div class="add-entry-grid">
+        <label class="field">
+          <span>${escapeHtml(t('ui.subject'))}</span>
+          <select id="entrySubject">
+            ${state.subjects.map((s) => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join("")}
+          </select>
+        </label>
+        <label class="field">
+          <span>${escapeHtml(t('ui.chart'))}</span>
+          <div class="segmented" id="entryTypeSeg">
+            <button type="button" data-type="${TYPES.TEST}" class="segmented-active">${escapeHtml(t('ui.testLabel'))}</button>
+            <button type="button" data-type="${TYPES.REPORT}">${escapeHtml(t('ui.reportLabel'))}</button>
+          </div>
+        </label>
+        <label class="field">
+          <span>${escapeHtml(t('ui.date'))}</span>
+          <input type="date" id="entryDate" value="${todayISO()}" />
+        </label>
+        <label class="field">
+          <span>${escapeHtml(t('ui.addGradeBtn'))}</span>
+          <input type="text" id="entryValue" placeholder="${escapeHtml(state.scale === 'finnish' ? t('ui.gradePlaceholderFinnish') : t('ui.gradePlaceholderHundred'))}" />
+        </label>
+        <label class="field field-wide">
+          <span>${escapeHtml(t('ui.labelOptional'))}</span>
+          <input type="text" id="entryLabel" placeholder="${escapeHtml(t('ui.labelOptional'))}" />
+        </label>
+        <label class="field field-wide">
+          <span>${escapeHtml(t('ui.noteOptional'))}</span>
+          <textarea id="entryNote" placeholder="${escapeHtml(t('ui.noteOptional'))}"></textarea>
+        </label>
+      </div>
+      <div class="field-hint">${escapeHtml(hint)}</div>
+      <div id="entryFormMsg"></div>
+      <button type="submit" class="btn-primary">${icon("plus", 16)} ${escapeHtml(t('ui.addGradeBtn'))}</button>
+    </form>
+  `;
+}
+
+function renderSubjectRow(s) {
+  const visible = state.visibleIds.has(s.id);
+  return `
+    <div class="subject-row" data-subject-id="${s.id}">
+      <button class="subject-visibility ${visible ? '' : 'subject-visibility-off'}" data-action="toggle-visible" data-id="${s.id}" title="${escapeHtml(visible ? t('ui.testsQuizzes') : t('ui.testsQuizzes'))}">
+        <span class="subject-dot" style="background:${visible ? s.color : 'var(--ink-faint)'}"></span>
+      </button>
+      <button class="subject-name" data-action="rename" data-id="${s.id}">${escapeHtml(s.name)}</button>
+      <div class="subject-goal-input">
+        ${icon("target", 12)}
+        <input type="text" value="${s.goal ?? ''}" placeholder="${escapeHtml(t('ui.add'))}" data-action="set-goal" data-id="${s.id}" />
+      </div>
+      <div class="subject-row-growth">${growthBadgeHtml(s.entries, "sm")}</div>
+      <div class="subject-row-actions">
+        <div class="color-picker-anchor">
+          <button class="icon-btn" data-action="open-color" data-id="${s.id}" title="${escapeHtml(t('ui.add'))}">
+            <span style="color:${s.color}">${icon("palette", 15)}</span>
+          </button>
+        </div>
+        <button class="icon-btn icon-btn-danger" data-action="delete-subject" data-id="${s.id}" title="${escapeHtml(t('ui.deleteConfirm'))}">${icon("trash", 15)}</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderSubjectDetail(s) {
+  const avg = average(s.entries);
+  const tests = s.entries.filter((e) => e.type === TYPES.TEST);
+  const reports = s.entries.filter((e) => e.type === TYPES.REPORT);
+  return `
+    <div class="subject-detail" data-subject-id="${s.id}">
+      <button class="subject-detail-toggle" data-action="toggle-detail" data-id="${s.id}">
+        <span class="detail-chevron">${icon("chevronRight", 16)}</span>
+        <span class="subject-dot-sm" style="background:${s.color}"></span>
+        <span class="subject-detail-name">${escapeHtml(s.name)}</span>
+        <span class="subject-detail-stats">
+          <span class="letter-grade">${escapeHtml(letterOrDescriptor(avg))}</span>
+          <span class="subject-detail-avg">${escapeHtml(t('ui.allEntries'))} ${formatGrade(avg)}</span>
+          ${growthBadgeHtml(s.entries, "sm")}
+        </span>
+      </button>
+      <div class="subject-detail-body" style="display:none;">
+        <div class="entry-filter">
+          <button class="active" data-action="filter" data-id="${s.id}" data-filter="all">${escapeHtml(t('filters.all'))} (${s.entries.length})</button>
+          <button data-action="filter" data-id="${s.id}" data-filter="${TYPES.TEST}">${escapeHtml(t('filters.tests'))} (${tests.length})</button>
+          <button data-action="filter" data-id="${s.id}" data-filter="${TYPES.REPORT}">${escapeHtml(t('filters.reports'))} (${reports.length})</button>
+        </div>
+        <div class="entry-list-wrap">${renderEntryList(s, "all")}</div>
+      </div>
+    </div>
+  `;
+}
+
+function renderEntryList(s, filter) {
+  const sorted = [...s.entries].sort((a, b) => b.date.localeCompare(a.date));
+  const filtered = filter === "all" ? sorted : sorted.filter((e) => e.type === filter);
+  if (!filtered.length) return `<p class="empty-state-mini">${escapeHtml(t('ui.noEntries'))}</p>`;
+  return `
+    <ul class="entry-list">
+      ${filtered.map((e) => `
+        <li class="entry-row">
+          <span class="entry-date">${fmtDate(e.date)}</span>
+          <span class="entry-type entry-type-${e.type}">${e.type === TYPES.TEST ? escapeHtml(t('ui.testLabel')) : escapeHtml(t('ui.reportLabel'))}</span>
+          <span class="entry-label">${escapeHtml(e.label || "—")}</span>
+          <span class="entry-value">${formatGrade(e.value)}</span>
+          <button class="icon-btn icon-btn-danger" data-action="delete-entry" data-subject="${s.id}" data-entry="${e.id}" title="${escapeHtml(t('ui.deleteConfirm'))}">${icon("x", 13)}</button>
+        </li>
+        ${e.note ? `<li class="entry-row-note">${icon("note", 11)} ${escapeHtml(e.note)}</li>` : ""}
+      `).join("")}
+    </ul>
+  `;
+}
+
+/* ======================================================================
+   RENDER: SETTINGS TAB
+====================================================================== */
+function renderSettingsTab() {
+  const sc = scaleDef();
+  return `
+    <section class="panel">
+      <h2 class="panel-title">${escapeHtml(t('ui.scale'))}</h2>
+      <div class="settings-row">
+        <div>
+          <div class="settings-row-label">${escapeHtml(t('ui.scale'))}</div>
+          <div class="settings-row-desc">${escapeHtml(t('ui.switchScaleBody'))}</div>
+        </div>
+        <div class="scale-toggle" id="scaleToggle">
+          <button data-scale="hundred" class="${state.scale === 'hundred' ? 'active' : ''}">0–100</button>
+          <button data-scale="finnish" class="${state.scale === 'finnish' ? 'active' : ''}">4–10</button>
+        </div>
+      </div>
+      ${state.scale === "finnish" ? `
+        <div class="scale-reference">
+          <span class="scale-chip">${escapeHtml(t('scaleReference'))}</span>
+        </div>` : ""}
+    </section>
+
+    <section class="panel">
+      <h2 class="panel-title">${escapeHtml(t('ui.backupSection'))}</h2>
+      <p class="settings-row-desc" style="margin-bottom:14px;">${escapeHtml(t('ui.backupSection'))}</p>
+      <div class="import-export-row">
+        <button class="btn-secondary" id="exportJsonBtn">${icon("upload", 14)} ${escapeHtml(t('ui.exportJson'))}</button>
+        <button class="btn-secondary" id="exportCsvBtn">${icon("upload", 14)} ${escapeHtml(t('ui.exportCsv'))}</button>
+        <button class="btn-secondary" id="importBtn">${icon("download", 14)} ${escapeHtml(t('ui.importJson'))}</button>
+        <input type="file" id="importFile" accept="application/json" />
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2 class="panel-title">${escapeHtml(t('ui.resetSection'))}</h2>
+      <p class="settings-row-desc" style="margin-bottom:14px;">${escapeHtml(t('ui.clearPromptBody'))}</p>
+      <button class="btn-danger-outline" id="resetAllBtn">${icon("trash", 14)} ${escapeHtml(t('ui.resetClearAll'))}</button>
+    </section>
+  `;
+}
+
+/* ======================================================================
+   EXPORT / IMPORT
+====================================================================== */
+function exportJson() {
+  const payload = {
+    version: 2,
+    exportedAt: new Date().toISOString(),
+    scale: state.scale,
+    subjects: state.subjects,
+  };
+  downloadFile(`gradebook-export-${todayISO()}.json`, JSON.stringify(payload, null, 2), "application/json");
+  showToast(`${icon("check", 14)} ${escapeHtml(t('ui.exportSuccessJson'))}`);
+}
+
+function exportCsv() {
+  const rows = [["subject", "type", "date", "value", "label", "note"]];
+  state.subjects.forEach((s) => {
+    s.entries.forEach((e) => {
+      rows.push([s.name, e.type, e.date, formatGrade(e.value), e.label || "", e.note || ""]);
+    });
+  });
+  const csv = rows.map((r) => r.map(csvEscape).join(",")).join("\n");
+  downloadFile(`gradebook-export-${todayISO()}.csv`, csv, "text/csv");
+  showToast(`${icon("check", 14)} ${escapeHtml(t('ui.exportSuccessCsv'))}`);
+}
+
+function csvEscape(v) {
+  const s = String(v ?? "");
+  if (/[",\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+  return s;
+}
+
+function downloadFile(filename, content, mime) {
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function importJsonFile(file) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const data = JSON.parse(reader.result);
+      if (!data || !Array.isArray(data.subjects)) throw new Error("bad shape");
+      confirmModal({
+        title: t('ui.importPromptTitle'),
+        body: t('ui.importPromptBody', { count: data.subjects.length }),
+        confirmLabel: t('ui.importConfirm'),
+        danger: true,
+        onConfirm: () => {
+          state.subjects = data.subjects.map((s) => ({
+            id: s.id || uid(),
+            name: s.name || "Untitled",
+            color: s.color || nextColor(),
+            goal: s.goal ?? null,
+            entries: (s.entries || []).map((e) => ({
+              id: e.id || uid(),
+              date: e.date,
+              value: e.value,
+              type: e.type === TYPES.REPORT ? TYPES.REPORT : TYPES.TEST,
+              label: e.label || "",
+              note: e.note || "",
+            })),
+          }));
+          if (data.scale && SCALES[data.scale]) state.scale = data.scale;
+          state.visibleIds = new Set(state.subjects.map((s) => s.id));
+          persist();
+          render();
+          showToast(`${icon("check", 14)} ${escapeHtml(t('ui.importSuccess'))}`);
+        },
+      });
+    } catch (err) {
+      showToast(`${icon("alert", 14)} ${escapeHtml(t('ui.importFail'))}`);
+    }
+  };
+  reader.readAsText(file);
+}
+
+/* ======================================================================
+   EVENT HANDLERS (delegated, re-attached on every render)
+====================================================================== */
+function attachHandlers() {
+  const root = document.getElementById("mainRoot");
+
+  root.querySelectorAll('[data-action="toggle-visible"]').forEach((el) => {
+    el.addEventListener("click", () => {
+      const id = el.dataset.id;
+      if (state.visibleIds.has(id)) state.visibleIds.delete(id); else state.visibleIds.add(id);
+      persist();
+      render();
+    });
+  });
+
+  const avgToggle = document.getElementById("toggleAverages");
+  if (avgToggle) avgToggle.addEventListener("change", (e) => { state.showAverages = e.target.checked; persist(); renderCharts(); });
+  const goalToggle = document.getElementById("toggleGoals");
+  if (goalToggle) goalToggle.addEventListener("change", (e) => { state.showGoals = e.target.checked; persist(); renderCharts(); });
+  const trendToggle = document.getElementById("toggleTrend");
+  if (trendToggle) trendToggle.addEventListener("change", (e) => { state.showTrend = e.target.checked; persist(); renderCharts(); });
+
+  const scaleToggle = document.getElementById("scaleToggle");
+  if (scaleToggle) {
+    scaleToggle.querySelectorAll("button").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const newScale = btn.dataset.scale;
+        if (newScale === state.scale) return;
+        confirmModal({
+          title: t('ui.switchScaleTitle'),
+          body: t('ui.switchScaleBody'),
+          confirmLabel: t('ui.switchScaleConfirm'),
+          onConfirm: () => { state.scale = newScale; persist(); render(); },
+        });
+      });
+    });
+  }
+
+  const exportJsonBtn = document.getElementById("exportJsonBtn");
+  if (exportJsonBtn) exportJsonBtn.addEventListener("click", exportJson);
+  const exportCsvBtn = document.getElementById("exportCsvBtn");
+  if (exportCsvBtn) exportCsvBtn.addEventListener("click", exportCsv);
+  const importBtn = document.getElementById("importBtn");
+  const importFile = document.getElementById("importFile");
+  if (importBtn && importFile) {
+    importBtn.addEventListener("click", () => importFile.click());
+    importFile.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (file) importJsonFile(file);
+      importFile.value = "";
+    });
+  }
+
+  const resetBtn = document.getElementById("resetAllBtn");
+  if (resetBtn) {
+    resetBtn.addEventListener("click", () => {
+      confirmModal({
+        title: t('ui.clearPromptTitle'),
+        body: t('ui.clearPromptBody'),
+        confirmLabel: t('ui.clearConfirm'),
+        danger: true,
+        onConfirm: () => {
+          state.subjects = [];
+          state.visibleIds = new Set();
+          persist();
+          render();
+          showToast(escapeHtml(t('ui.clearedToast')));
+        },
+      });
+    });
+  }
+
+  const addEntryForm = document.getElementById("addEntryForm");
+  if (addEntryForm) {
+    let entryType = TYPES.TEST;
+    const seg = document.getElementById("entryTypeSeg");
+    seg.querySelectorAll("button").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        entryType = btn.dataset.type;
+        seg.querySelectorAll("button").forEach((b) => b.classList.toggle("segmented-active", b === btn));
+      });
+    });
+
+    addEntryForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const subjectId = document.getElementById("entrySubject").value;
+      const date = document.getElementById("entryDate").value;
+      const rawValue = document.getElementById("entryValue").value;
+      const label = document.getElementById("entryLabel").value.trim();
+      const note = document.getElementById("entryNote").value.trim();
+      const msgEl = document.getElementById("entryFormMsg");
+
+      const parsed = parseGradeInput(rawValue);
+      const sc = scaleDef();
+
+      if (parsed === null) {
+        msgEl.innerHTML = `<div class="form-error">${icon("alert", 13)} ${escapeHtml(state.scale === 'finnish' ? t('ui.cannotReadGrade') : t('ui.enterNumericGrade'))}</div>`;
+        return;
+      }
+      if (parsed < sc.min || parsed > sc.max) {
+        msgEl.innerHTML = `<div class="form-error">${icon("alert", 13)} ${escapeHtml(t('ui.gradeRangeError', { min: sc.min, max: sc.max }))}</div>`;
+        return;
+      }
+      if (!subjectId) {
+        msgEl.innerHTML = `<div class="form-error">${icon("alert", 13)} ${escapeHtml(t('ui.addSubjectFirst'))}</div>`;
+        return;
+      }
+      if (!date) {
+        msgEl.innerHTML = `<div class="form-error">${icon("alert", 13)} ${escapeHtml(t('ui.pickDate'))}</div>`;
+        return;
+      }
+
+      const subject = state.subjects.find((s) => s.id === subjectId);
+      subject.entries.push({ id: uid(), date, value: parsed, type: entryType, label, note });
+      persist();
+
+      msgEl.innerHTML = `<div class="form-success">${icon("check", 13)} ${escapeHtml(t('ui.addedEntrySuccessForm', { value: formatGrade(parsed), subject: subject.name }))}</div>`;
+      document.getElementById("entryValue").value = "";
+      document.getElementById("entryLabel").value = "";
+      document.getElementById("entryNote").value = "";
+      render();
+    });
+  }
+
+  const addSubjectForm = document.getElementById("addSubjectForm");
+  if (addSubjectForm) {
+    addSubjectForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const input = document.getElementById("newSubjectName");
+      const name = input.value.trim();
+      if (!name) return;
+      const s = { id: uid(), name, color: nextColor(), goal: null, entries: [] };
+      state.subjects.push(s);
+      state.visibleIds.add(s.id);
+      persist();
+      render();
+      showToast(`${icon("check", 14)} ${escapeHtml(t('ui.addedSubjectToast', { name }))}`);
+    });
+  }
+
+  root.querySelectorAll('[data-action="rename"]').forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const id = btn.dataset.id;
+      const subject = state.subjects.find((s) => s.id === id);
+      const row = btn.closest(".subject-row");
+      const input = document.createElement("input");
+      input.className = "subject-name-input";
+      input.value = subject.name;
+      btn.replaceWith(input);
+      input.focus();
+      input.select();
+      const commit = () => {
+        const val = input.value.trim();
+        if (val) { subject.name = val; persist(); }
+        render();
+      };
+      input.addEventListener("blur", commit);
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") commit();
+        if (e.key === "Escape") render();
+      });
+    });
+  });
+
+  root.querySelectorAll('[data-action="set-goal"]').forEach((input) => {
+    input.addEventListener("change", () => {
+      const id = input.dataset.id;
+      const subject = state.subjects.find((s) => s.id === id);
+      const raw = input.value.trim();
+      if (!raw) { subject.goal = null; persist(); return; }
+      const parsed = parseGradeInput(raw);
+      if (parsed === null) { input.value = subject.goal ?? ""; return; }
+      subject.goal = clampToScale(parsed);
+      input.value = formatGrade(subject.goal);
+      persist();
+      if (state.tab === "charts") renderCharts();
+    });
+  });
+
+  root.querySelectorAll('[data-action="open-color"]').forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const existing = btn.parentElement.querySelector(".color-picker");
+      if (existing) { existing.remove(); return; }
+      document.querySelectorAll(".color-picker").forEach((p) => p.remove());
+      const id = btn.dataset.id;
+      const subject = state.subjects.find((s) => s.id === id);
+      const picker = document.createElement("div");
+      picker.className = "color-picker";
+      picker.innerHTML = `
+        <div class="color-grid">
+          ${COLOR_SWATCHES.map((c) => `<button type="button" class="color-swatch ${c === subject.color ? 'color-swatch-active' : ''}" style="background:${c}" data-color="${c}"></button>`).join("")}
+        </div>
+        <label class="color-custom"><span>Custom</span><input type="color" value="${subject.color}" /></label>
+      `;
+      btn.parentElement.appendChild(picker);
+      picker.querySelectorAll(".color-swatch").forEach((sw) => {
+        sw.addEventListener("click", () => {
+          subject.color = sw.dataset.color;
+          persist();
+          render();
+        });
+      });
+      picker.querySelector('input[type="color"]').addEventListener("input", (ev) => {
+        subject.color = ev.target.value;
+        persist();
+        render();
+      });
+      const closeHandler = (ev) => {
+        if (!picker.contains(ev.target) && ev.target !== btn) {
+          picker.remove();
+          document.removeEventListener("click", closeHandler);
+        }
+      };
+      setTimeout(() => document.addEventListener("click", closeHandler), 0);
+    });
+  });
+
+  root.querySelectorAll('[data-action="delete-subject"]').forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const id = btn.dataset.id;
+      const subject = state.subjects.find((s) => s.id === id);
+      confirmModal({
+        title: t('ui.deleteSubjectTitle', { name: subject.name }),
+        body: t('ui.deleteSubjectBody', { count: subject.entries.length }),
+        confirmLabel: t('ui.deleteConfirm'),
+        danger: true,
+        onConfirm: () => {
+          state.subjects = state.subjects.filter((s) => s.id !== id);
+          state.visibleIds.delete(id);
+          persist();
+          render();
+          showToast(`${icon("check", 14)} ${escapeHtml(t('ui.deletedToast', { name: subject.name }))}`);
+        },
+      });
+    });
+  });
+
+  root.querySelectorAll('[data-action="toggle-detail"]').forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const body = btn.parentElement.querySelector(".subject-detail-body");
+      const chevron = btn.querySelector(".detail-chevron");
+      const isOpen = body.style.display !== "none";
+      body.style.display = isOpen ? "none" : "block";
+      chevron.innerHTML = isOpen ? icon("chevronRight", 16) : icon("chevronDown", 16);
+    });
+  });
+
+  root.querySelectorAll('[data-action="filter"]').forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const id = btn.dataset.id;
+      const filter = btn.dataset.filter;
+      const subject = state.subjects.find((s) => s.id === id);
+      const container = btn.closest(".subject-detail");
+      container.querySelectorAll('[data-action="filter"]').forEach((b) => b.classList.toggle("active", b === btn));
+      container.querySelector(".entry-list-wrap").innerHTML = renderEntryList(subject, filter);
+      attachEntryDeleteHandlers(container);
+    });
+  });
+
+  attachEntryDeleteHandlers(root);
+}
+
+function attachEntryDeleteHandlers(scope) {
+  scope.querySelectorAll('[data-action="delete-entry"]').forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const subjectId = btn.dataset.subject;
+      const entryId = btn.dataset.entry;
+      const subject = state.subjects.find((s) => s.id === subjectId);
+      subject.entries = subject.entries.filter((e) => e.id !== entryId);
+      persist();
+      render();
+    });
+  });
+}
+
+/* ======================================================================
+   INIT
+====================================================================== */
+async function init() {
+  try {
+    const langSelect = document.getElementById("langSelect");
+    langSelect.value = state.lang || 'en';
+    langSelect.addEventListener("change", (e) => {
+      state.lang = e.target.value;
+      try { localStorage.setItem(STORAGE_KEY + ':lang', state.lang); } catch (e) {}
+      localizeDom(document);
+      render();
+    });
+
+    document.querySelectorAll('[data-icon]').forEach((el) => {
+      const name = el.dataset.icon;
+      el.innerHTML = icon(name, 15);
+    });
+    localizeDom(document);
+
+    document.getElementById("storageWarning").style.display = state.hasStorage ? "none" : "flex";
+    document.getElementById("storageWarningText").textContent = state.hasStorage ? "" : t('storage.warning');
+    document.getElementById("footerText").textContent = state.hasStorage
+      ? t('storage.footerSaved')
+      : t('storage.footerNotSaving');
+
+    const data = await loadState();
+    if (data && Array.isArray(data.subjects) && data.subjects.length) {
+      state.subjects = data.subjects.map((s) => ({
+        id: s.id || uid(),
+        name: s.name,
+        color: s.color,
+        goal: s.goal ?? null,
+        entries: (s.entries || []).map((e) => ({ note: "", ...e })),
+      }));
+      state.scale = data.scale && SCALES[data.scale] ? data.scale : state.scale;
+      state.showAverages = data.showAverages !== undefined ? data.showAverages : state.showAverages;
+      state.showGoals = data.showGoals !== undefined ? data.showGoals : state.showGoals;
+      state.showTrend = !!data.showTrend;
+      state.visibleIds = data.visibleIds && data.visibleIds.length ? new Set(data.visibleIds) : new Set(state.subjects.map((s) => s.id));
+    } else {
+      state.subjects = makeDefaultSubjects(state.scale);
+      state.visibleIds = new Set(state.subjects.map((s) => s.id));
+    }
+    state.loaded = true;
+
+    try { render(); } catch (err) { window.__gt_showError && window.__gt_showError(err.message || String(err), err && err.stack); }
+  } catch (errInit) {
+    window.__gt_showError && window.__gt_showError(errInit.message || String(errInit), errInit && errInit.stack);
+  }
+}
+
+init();
+</script>
+</body>
+</html>
