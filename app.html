@@ -4,6 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
 <title>Gradebook</title>
+<link rel="icon" type="image/x-icon" href="/images/favicon.ico">
 <style>
 /* ======================================================================
    DESIGN TOKENS
@@ -185,8 +186,66 @@ a { color: inherit; }
 .icon-btn-danger:hover { background: var(--red-soft); color: var(--red); }
 .icon-btn svg { width: 15px; height: 15px; }
 
-.subject-goal-input { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--ink-faint); }
-.subject-goal-input input { width: 52px; border: 1px solid var(--rule-strong); border-radius: 5px; padding: 3px 5px; font-family: var(--font-mono); font-size: 12px; background: var(--paper); }
+.subject-goal-input { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-faint); background: var(--paper); border: 1px solid var(--rule-strong); border-radius: 7px; padding: 4px 8px 4px 6px; }
+.subject-goal-input .goal-label { font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; font-size: 10px; color: var(--ink-faint); white-space: nowrap; }
+.subject-goal-input input { width: 56px; border: none; padding: 2px 2px; font-family: var(--font-mono); font-size: 12.5px; background: transparent; color: var(--ink); font-weight: 700; }
+.subject-goal-input input:focus { outline: none; }
+.subject-goal-input.has-goal { border-color: var(--gold); background: var(--gold-soft); }
+.subject-goal-input.has-goal .goal-label, .subject-goal-input.has-goal input { color: var(--gold); }
+.goal-clear-btn { border: none; background: transparent; cursor: pointer; color: var(--ink-faint); padding: 0; display: flex; }
+.goal-clear-btn:hover { color: var(--red); }
+
+/* Dashed-name rename treatment */
+.subject-name-dashed {
+  background: transparent; border: none; font-size: 14.5px; font-weight: 600; cursor: pointer; text-align: left;
+  font-family: var(--font-body); color: var(--ink); flex: 1; padding: 4px 2px; min-width: 80px;
+  border-bottom: 1.5px dashed var(--rule-strong); border-radius: 0;
+  transition: border-color 0.15s, color 0.15s;
+}
+.subject-name-dashed:hover { border-color: var(--red); color: var(--red); }
+.subject-name-editing-wrap { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 80px; }
+.subject-name-editing-wrap .name-dash { color: var(--ink-faint); font-family: var(--font-mono); font-weight: 400; }
+.subject-name-input-dashed {
+  flex: 1; border: none; border-bottom: 1.5px dashed var(--red); border-radius: 0; padding: 4px 2px;
+  font-size: 14.5px; font-weight: 600; font-family: var(--font-body); min-width: 60px; background: transparent; color: var(--ink);
+}
+.subject-name-input-dashed:focus { outline: none; }
+
+/* Sort controls */
+.subject-list-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+.sort-control { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-faint); }
+.sort-control select { border: 1.5px solid var(--rule-strong); border-radius: 7px; padding: 5px 8px; font-size: 12.5px; font-family: var(--font-body); background: var(--paper-raised); color: var(--ink); }
+.sort-direction-btn { border: 1.5px solid var(--rule-strong); background: var(--paper-raised); border-radius: 7px; padding: 5px 7px; cursor: pointer; color: var(--ink-soft); display: flex; }
+.sort-direction-btn:hover { border-color: var(--ink); }
+.drag-handle { cursor: grab; color: var(--ink-faint); padding: 4px 2px; flex-shrink: 0; touch-action: none; }
+.drag-handle:active { cursor: grabbing; }
+.subject-row.dragging { opacity: 0.4; }
+.subject-row.drag-over { border-top: 2px solid var(--red); }
+
+/* All-subjects aggregate card */
+.aggregate-card {
+  background: var(--paper-raised); border: 1.5px solid var(--ink); border-left: 4px solid var(--ink);
+  border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px;
+  grid-column: 1 / -1;
+}
+.aggregate-card .summary-card-top { color: var(--ink); }
+.aggregate-card .summary-card-avg { color: var(--ink); }
+
+/* Self-assessment smileys */
+.smiley-picker { display: flex; gap: 6px; }
+.smiley-btn { border: 1.5px solid var(--rule-strong); background: var(--paper); border-radius: 50%; width: 36px; height: 36px; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.1s, border-color 0.15s; padding: 0; line-height: 1; }
+.smiley-btn:hover { transform: scale(1.1); }
+.smiley-btn.smiley-selected { border-color: var(--ink); border-width: 2px; background: var(--paper-raised); box-shadow: 0 2px 6px rgba(27,42,65,0.15); }
+.entry-smiley { font-size: 14px; margin-left: 2px; }
+
+/* Upcoming test badge */
+.upcoming-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; padding: 2px 7px; border-radius: 4px; background: var(--gold-soft); color: var(--gold); }
+.upcoming-list { display: flex; flex-direction: column; gap: 6px; }
+.upcoming-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1.5px dashed var(--rule-strong); border-radius: 8px; font-size: 13px; }
+.upcoming-row-date { font-family: var(--font-mono); font-weight: 700; color: var(--gold); min-width: 56px; }
+.upcoming-row-subject { display: flex; align-items: center; gap: 6px; font-weight: 600; flex: 1; }
+.upcoming-row-label { color: var(--ink-faint); font-size: 12px; flex: 1; }
+.countdown-chip { font-family: var(--font-mono); font-size: 11px; background: var(--rule); padding: 2px 7px; border-radius: 999px; color: var(--ink-soft); white-space: nowrap; }
 
 .color-picker-anchor { position: relative; }
 .color-picker {
@@ -350,6 +409,11 @@ function icon(name, size) {
     target: `<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>`,
     note: `<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>`,
     check: `<polyline points="20 6 9 17 4 12"/>`,
+    dragHandle: `<circle cx="9" cy="6" r="1.2"/><circle cx="15" cy="6" r="1.2"/><circle cx="9" cy="12" r="1.2"/><circle cx="15" cy="12" r="1.2"/><circle cx="9" cy="18" r="1.2"/><circle cx="15" cy="18" r="1.2"/>`,
+    calendar: `<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>`,
+    smile: `<circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9" y2="9.01"/><line x1="15" y1="9" x2="15" y2="9.01"/>`,
+    sortAsc: `<path d="M11 5h10"/><path d="M11 9h7"/><path d="M11 13h4"/><path d="m3 17 3 3 3-3"/><path d="M6 18V4"/>`,
+    sortDesc: `<path d="M11 5h4"/><path d="M11 9h7"/><path d="M11 13h10"/><path d="m3 7 3-3 3 3"/><path d="M6 6v14"/>`,
   };
   return `<svg ${common}>${paths[name] || ''}</svg>`;
 }
@@ -363,8 +427,8 @@ const TRANSLATIONS = {
     tabs: { charts: "Charts", manage: "Manage", settings: "Settings" },
     storage: {
       warning: "Storage isn't available right now — your changes won't be saved between sessions.",
-      footerSaved: "Saved automatically on this device. Contact 4nkanpaa@gmail.com for support.",
-      footerNotSaving: "Not saving — storage unavailable. Contact 4nkanpaa@gmail.com for support."
+      footerSaved: "Saved automatically on this device.",
+      footerNotSaving: "Not saving — storage unavailable."
     },
     ui: {
       logGrade: "Log a grade",
@@ -385,6 +449,7 @@ const TRANSLATIONS = {
       gradePlaceholderHundred: "e.g. 87",
       gradePlaceholderFinnish: "e.g. 8.5 or 9+",
       date: "Date",
+      grade: "Grade",
       subject: "Subject",
       chart: "Chart",
       exportJson: "Export JSON",
@@ -420,29 +485,68 @@ const TRANSLATIONS = {
       toggleGoals: "Toggle goals",
       toggleTrend: "Toggle trends",
       toggleAverages: "Toggle averages",
+      toggleVisibility: "Show/hide on charts",
       testsQuizzes: "Tests & quizzes",
       reportCard: "Report card",
       backupSection: "Backup",
+      backupSectionDesc: "Export everything to a file you can keep, or move to another device. Importing replaces all current data.",
       resetSection: "Reset",
       scale: "Scale",
+      goalLabel: "Goal",
+      goalPlaceholder: "none",
+      goalHint: "Target grade for this subject — shown as a dotted line on the chart",
+      clearGoal: "Clear goal",
+      renameHint: "Click to rename",
+      chooseColor: "Choose color",
+      dragToReorder: "Drag to reorder",
+      sortBy: "Sort by",
+      sortManual: "Manual order",
+      sortName: "Name",
+      sortAverage: "Average",
+      sortGrowth: "Recent growth",
+      sortAscending: "Ascending",
+      sortDescending: "Descending",
+      allSubjects: "All subjects",
+      overallAverage: "Overall average",
+      overallGoal: "Overall goal",
+      upcomingTests: "Upcoming tests",
+      noUpcoming: "No upcoming tests scheduled.",
+      addUpcoming: "Schedule a test",
+      testDate: "Test date",
+      daysAway: "in {days}d",
+      dayAway: "tomorrow",
+      today: "today",
+      overdue: "overdue",
+      markComplete: "Add grade for this test",
+      selfAssessment: "How did it feel?",
+      selfAssessmentOptional: "Self-assessment (optional)",
+      smileyAwful: "Awful",
+      smileyBad: "Not great",
+      smileyOkay: "Okay",
+      smileyGood: "Good",
+      smileyGreat: "Great",
+      entryTypeUpcoming: "Upcoming",
+      addUpcomingBtn: "Schedule test",
+      addedUpcomingToast: "Scheduled {label} for {subject}",
+      convertUpcoming: "Log result",
     },
     scaleHint: {
-      finnish: "Finnish scale 4–10. Try: 8, 8.5, 8½, 9+, 9-",
+      finnish: "Finnish scale 4–10. Try: 8, 8.5, 8½, 9+, 9-, 10+",
       hundred: "Scale 0–100."
     },
-    scaleReference: "10 excellent · 9 very good · 8 good · 7 satisfactory · 6 moderate · 5 adequate · 4 fail · 9+ = 9.25 · 9½ = 9.5 · 10- = 9.75",
+    scaleReference: "10 excellent · 9 very good · 8 good · 7 satisfactory · 6 moderate · 5 adequate · 4 fail · 9+ = 9.25 · 9½ = 9.5 · 10- = 9.75 · 10+ = exceptional (unofficial)",
     confirm: { cancel: "Cancel", confirm: "Confirm" },
     filters: { all: "All", tests: "Tests", reports: "Report card" },
     toast: { exported: "Exported", imported: "Imported" },
     descriptors: {
       finnish: {
-        10: "excellent",
-        9: "very good",
-        8: "good",
-        7: "satisfactory",
-        6: "moderate",
-        5: "adequate",
-        4: "fail",
+        10: "Excellent",
+        9: "Very good",
+        8: "Good",
+        7: "Satisfactory",
+        6: "Moderate",
+        5: "Adequate",
+        4: "Fail",
       },
     },
   },
@@ -451,8 +555,8 @@ const TRANSLATIONS = {
     tabs: { charts: "Kaaviot", manage: "Hallitse", settings: "Asetukset" },
     storage: {
       warning: "Tallennustila ei ole käytettävissä juuri nyt — muutoksiasi ei tallenneta istuntojen välillä.",
-      footerSaved: "Tallennettu automaattisesti laitteellesi. Ota yhteyttä osoitteeseen 4nkanpaa@gmail.com saadaksesi tukea.",
-      footerNotSaving: "Ei tallennettu — tallennustila ei käytettävissä. Ota yhteyttä osoitteeseen 4nkanpaa@gmail.com saadaksesi tukea.",
+      footerSaved: "Tallennettu automaattisesti laitteellesi.",
+      footerNotSaving: "Ei tallennettu — tallennustila ei käytettävissä.",
     },
     ui: {
       logGrade: "Kirjaa arvosana",
@@ -473,6 +577,7 @@ const TRANSLATIONS = {
       gradePlaceholderHundred: "esim. 87",
       gradePlaceholderFinnish: "esim. 8.5 tai 9+",
       date: "Päivämäärä",
+      grade: "Arvosana",
       subject: "Aine",
       chart: "Kaavio",
       exportJson: "Vie JSON",
@@ -508,29 +613,69 @@ const TRANSLATIONS = {
       toggleGoals: "Tavoitteet",
       toggleTrend: "Trendi",
       toggleAverages: "Keskiarvot",
+      toggleVisibility: "Näytä/piilota kaaviossa",
       testsQuizzes: "Kokeet",
       reportCard: "Arviointi",
       backupSection: "Varmuuskopio",
+      backupSectionDesc: "Vie kaikki tiedot tiedostoon, jonka voit säilyttää tai siirtää toiselle laitteelle. Tuonti korvaa kaikki nykyiset tiedot.",
       resetSection: "Nollaa",
       scale: "Asteikko",
+      goalLabel: "Tavoite",
+      goalPlaceholder: "ei",
+      goalHint: "Tämän aineen tavoitearvosana — näytetään pisteviivana kaaviossa",
+      clearGoal: "Poista tavoite",
+      renameHint: "Klikkaa nimetäksesi uudelleen",
+      chooseColor: "Valitse väri",
+      dragToReorder: "Raahaa järjestääksesi",
+      sortBy: "Järjestä",
+      sortManual: "Manuaalinen järjestys",
+      sortName: "Nimi",
+      sortAverage: "Keskiarvo",
+      sortGrowth: "Viimeisin muutos",
+      sortAscending: "Nouseva",
+      sortDescending: "Laskeva",
+      allSubjects: "Kaikki aineet",
+      overallAverage: "Kokonaiskeskiarvo",
+      overallGoal: "Kokonaistavoite",
+      upcomingTests: "Tulevat kokeet",
+      noUpcoming: "Ei tulevia kokeita aikataulutettuna.",
+      addUpcoming: "Aikatauluta koe",
+      testDate: "Koepäivä",
+      daysAway: "{days} pv",
+      dayAway: "huomenna",
+      today: "tänään",
+      overdue: "myöhässä",
+      markComplete: "Lisää arvosana tälle kokeelle",
+      selfAssessment: "Miltä se tuntui?",
+      selfAssessmentOptional: "Itsearviointi (valinnainen)",
+      smileyAwful: "Surkea",
+      smileyBad: "Ei hyvä",
+      smileyOkay: "Ok",
+      smileyGood: "Hyvä",
+      smileyGreat: "Loistava",
+      entryTypeUpcoming: "Tuleva",
+      addUpcomingBtn: "Aikatauluta koe",
+      addedUpcomingToast: "Aikataulutettu {label} aineelle {subject}",
+      convertUpcoming: "Kirjaa tulos",
+      upcomingPlaceholder: "esim. kappalekoe 5",
     },
     scaleHint: {
-      finnish: "Suomalainen asteikko 4–10. Esim: 8, 8.5, 8½, 9+, 9-",
+      finnish: "Suomalainen asteikko 4–10. Esim: 8, 8.5, 8½, 9+, 9-, 10+",
       hundred: "Asteikko 0–100."
     },
-    scaleReference: "10 erinomainen · 9 kiitettävä · 8 hyvä · 7 tyydyttävä · 6 kohtalainen · 5 välttävä · 4 hylätty · 9+ = 9.25 · 9½ = 9.5 · 10- = 9.75",
+    scaleReference: "10 erinomainen · 9 kiitettävä · 8 hyvä · 7 tyydyttävä · 6 kohtalainen · 5 välttävä · 4 hylätty · 9+ = 9.25 · 9½ = 9.5 · 10- = 9.75 · 10+ = erinomainen plus (epävirallinen)",
     confirm: { cancel: "Peruuta", confirm: "Vahvista" },
     filters: { all: "Kaikki", tests: "Kokeet", reports: "Arviointi" },
     toast: { exported: "Viety", imported: "Tuotu" },
     descriptors: {
       finnish: {
-        10: "erinomainen",
-        9: "kiitettävä",
-        8: "hyvä",
-        7: "tyydyttävä",
-        6: "kohtalainen",
-        5: "välttävä",
-        4: "hylätty",
+        10: "Erinomainen",
+        9: "Kiitettävä",
+        8: "Hyvä",
+        7: "Tyydyttävä",
+        6: "Kohtalainen",
+        5: "Välttävä",
+        4: "Hylätty",
       },
   },
 }
@@ -561,7 +706,7 @@ const TYPES = { TEST: "test", REPORT: "report" };
 const STORAGE_KEY = "gradebook:v2";
 const SCALES = {
   hundred: { id: "hundred", label: "0–100", min: 0, max: 100, step: 0.1 },
-  finnish: { id: "finnish", label: "Finnish 4–10", min: 4, max: 10, step: 0.25 },
+  finnish: { id: "finnish", label: "Finnish 4–10", min: 4, max: 10.25, step: 0.25 },
 };
 
 const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
@@ -603,6 +748,7 @@ function parseFinnishGrade(raw) {
 
 function formatFinnishGrade(value) {
   if (value === null || value === undefined || Number.isNaN(value)) return "—";
+  if (Math.abs(value - 10.25) < 0.001) return "10+";
   const whole = Math.floor(value);
   const frac = Math.round((value - whole) * 100) / 100;
   if (frac === 0) return String(whole);
@@ -634,9 +780,12 @@ const state = {
   showAverages: true,
   showGoals: true,
   showTrend: false,
+  showOverallAverage: true,
   scale: "hundred",
   tab: "charts",
   loaded: false,
+  subjectSort: "manual",
+  subjectSortDir: "asc",
   hasStorage: (typeof window !== "undefined") && (!!window.storage || (function(){ try { localStorage.setItem("__gt_test","1"); localStorage.removeItem("__gt_test"); return true;} catch(e){return false;} })()),
   lang: (function(){ try { const v = (window.localStorage && localStorage.getItem(STORAGE_KEY + ':lang')) || null; return v || 'en'; } catch(e){ return 'en'; } })(),
 };
@@ -647,40 +796,47 @@ const charts = {}; // canvas chart instances by panel id
    DEFAULT DATA
 ====================================================================== */
 function makeDefaultSubjects(scale) {
+  const inDays = (n) => {
+    const d = new Date();
+    d.setDate(d.getDate() + n);
+    return d.toISOString().slice(0, 10);
+  };
   if (scale === "finnish") {
     return [
       { id: uid(), name: "Mathematics", color: "#3D5A80", goal: 9, entries: [
-        { id: uid(), date: "2026-01-15", value: 7, type: TYPES.TEST, label: "Quiz 1", note: "" },
-        { id: uid(), date: "2026-02-02", value: 8, type: TYPES.TEST, label: "Quiz 2", note: "" },
-        { id: uid(), date: "2026-02-20", value: 7.5, type: TYPES.TEST, label: "Midterm", note: "Careful with derivatives" },
-        { id: uid(), date: "2026-03-10", value: 8.5, type: TYPES.TEST, label: "Quiz 3", note: "" },
-        { id: uid(), date: "2026-01-31", value: 7, type: TYPES.REPORT, label: "Term 1", note: "" },
-        { id: uid(), date: "2026-03-31", value: 8, type: TYPES.REPORT, label: "Term 2", note: "" },
+        { id: uid(), date: "2026-01-15", value: 7, type: TYPES.TEST, label: "Quiz 1", note: "", smiley: 2, upcoming: false },
+        { id: uid(), date: "2026-02-02", value: 8, type: TYPES.TEST, label: "Quiz 2", note: "", smiley: 3, upcoming: false },
+        { id: uid(), date: "2026-02-20", value: 7.5, type: TYPES.TEST, label: "Midterm", note: "Careful with derivatives", smiley: 1, upcoming: false },
+        { id: uid(), date: "2026-03-10", value: 8.5, type: TYPES.TEST, label: "Quiz 3", note: "", smiley: 4, upcoming: false },
+        { id: uid(), date: "2026-01-31", value: 7, type: TYPES.REPORT, label: "Term 1", note: "", smiley: null, upcoming: false },
+        { id: uid(), date: "2026-03-31", value: 8, type: TYPES.REPORT, label: "Term 2", note: "", smiley: null, upcoming: false },
+        { id: uid(), date: inDays(6), value: null, type: TYPES.TEST, label: "Chapter 6 test", note: "", smiley: null, upcoming: true },
       ]},
       { id: uid(), name: "Biology", color: "#5C7A5C", goal: 9, entries: [
-        { id: uid(), date: "2026-01-20", value: 9, type: TYPES.TEST, label: "Lab report", note: "" },
-        { id: uid(), date: "2026-02-12", value: 8, type: TYPES.TEST, label: "Unit test", note: "" },
-        { id: uid(), date: "2026-03-05", value: 9.5, type: TYPES.TEST, label: "Quiz", note: "" },
-        { id: uid(), date: "2026-01-31", value: 8, type: TYPES.REPORT, label: "Term 1", note: "" },
-        { id: uid(), date: "2026-03-31", value: 9, type: TYPES.REPORT, label: "Term 2", note: "" },
+        { id: uid(), date: "2026-01-20", value: 9, type: TYPES.TEST, label: "Lab report", note: "", smiley: 4, upcoming: false },
+        { id: uid(), date: "2026-02-12", value: 8, type: TYPES.TEST, label: "Unit test", note: "", smiley: 3, upcoming: false },
+        { id: uid(), date: "2026-03-05", value: 9.5, type: TYPES.TEST, label: "Quiz", note: "", smiley: 4, upcoming: false },
+        { id: uid(), date: "2026-01-31", value: 8, type: TYPES.REPORT, label: "Term 1", note: "", smiley: null, upcoming: false },
+        { id: uid(), date: "2026-03-31", value: 9, type: TYPES.REPORT, label: "Term 2", note: "", smiley: null, upcoming: false },
       ]},
     ];
   }
   return [
     { id: uid(), name: "Mathematics", color: "#3D5A80", goal: 90, entries: [
-      { id: uid(), date: "2026-01-15", value: 78, type: TYPES.TEST, label: "Quiz 1", note: "" },
-      { id: uid(), date: "2026-02-02", value: 82, type: TYPES.TEST, label: "Quiz 2", note: "" },
-      { id: uid(), date: "2026-02-20", value: 75, type: TYPES.TEST, label: "Midterm", note: "Need to review chapter 4" },
-      { id: uid(), date: "2026-03-10", value: 88, type: TYPES.TEST, label: "Quiz 3", note: "" },
-      { id: uid(), date: "2026-01-31", value: 79, type: TYPES.REPORT, label: "Term 1", note: "" },
-      { id: uid(), date: "2026-03-31", value: 84, type: TYPES.REPORT, label: "Term 2", note: "" },
+      { id: uid(), date: "2026-01-15", value: 78, type: TYPES.TEST, label: "Quiz 1", note: "", smiley: 2, upcoming: false },
+      { id: uid(), date: "2026-02-02", value: 82, type: TYPES.TEST, label: "Quiz 2", note: "", smiley: 3, upcoming: false },
+      { id: uid(), date: "2026-02-20", value: 75, type: TYPES.TEST, label: "Midterm", note: "Need to review chapter 4", smiley: 1, upcoming: false },
+      { id: uid(), date: "2026-03-10", value: 88, type: TYPES.TEST, label: "Quiz 3", note: "", smiley: 4, upcoming: false },
+      { id: uid(), date: "2026-01-31", value: 79, type: TYPES.REPORT, label: "Term 1", note: "", smiley: null, upcoming: false },
+      { id: uid(), date: "2026-03-31", value: 84, type: TYPES.REPORT, label: "Term 2", note: "", smiley: null, upcoming: false },
+      { id: uid(), date: inDays(6), value: null, type: TYPES.TEST, label: "Chapter 6 test", note: "", smiley: null, upcoming: true },
     ]},
     { id: uid(), name: "Biology", color: "#5C7A5C", goal: 95, entries: [
-      { id: uid(), date: "2026-01-20", value: 91, type: TYPES.TEST, label: "Lab report", note: "" },
-      { id: uid(), date: "2026-02-12", value: 86, type: TYPES.TEST, label: "Unit test", note: "" },
-      { id: uid(), date: "2026-03-05", value: 93, type: TYPES.TEST, label: "Quiz", note: "" },
-      { id: uid(), date: "2026-01-31", value: 89, type: TYPES.REPORT, label: "Term 1", note: "" },
-      { id: uid(), date: "2026-03-31", value: 90, type: TYPES.REPORT, label: "Term 2", note: "" },
+      { id: uid(), date: "2026-01-20", value: 91, type: TYPES.TEST, label: "Lab report", note: "", smiley: 4, upcoming: false },
+      { id: uid(), date: "2026-02-12", value: 86, type: TYPES.TEST, label: "Unit test", note: "", smiley: 3, upcoming: false },
+      { id: uid(), date: "2026-03-05", value: 93, type: TYPES.TEST, label: "Quiz", note: "", smiley: 4, upcoming: false },
+      { id: uid(), date: "2026-01-31", value: 89, type: TYPES.REPORT, label: "Term 1", note: "", smiley: null, upcoming: false },
+      { id: uid(), date: "2026-03-31", value: 90, type: TYPES.REPORT, label: "Term 2", note: "", smiley: null, upcoming: false },
     ]},
   ];
 }
@@ -711,8 +867,11 @@ function persist() {
       showAverages: state.showAverages,
       showGoals: state.showGoals,
       showTrend: state.showTrend,
+      showOverallAverage: state.showOverallAverage,
       scale: state.scale,
       visibleIds: Array.from(state.visibleIds),
+      subjectSort: state.subjectSort,
+      subjectSortDir: state.subjectSortDir,
     });
     try {
       if (window.storage) {
@@ -772,6 +931,65 @@ function getGrowth(entries) {
   const pct = prev !== 0 ? (delta / prev) * 100 : 0;
   const direction = delta > 0.001 ? "up" : delta < -0.001 ? "down" : "flat";
   return { delta, pct, direction };
+}
+
+// graded() filters out upcoming/scheduled entries that don't have a real grade yet
+function graded(entries) {
+  return entries.filter((e) => !e.upcoming && e.value !== null && e.value !== undefined);
+}
+
+function sortedSubjects() {
+  const list = [...state.subjects];
+  if (state.subjectSort === "manual") return list;
+  const dir = state.subjectSortDir === "desc" ? -1 : 1;
+  if (state.subjectSort === "name") {
+    list.sort((a, b) => a.name.localeCompare(b.name) * dir);
+  } else if (state.subjectSort === "average") {
+    list.sort((a, b) => {
+      const avgA = average(graded(a.entries));
+      const avgB = average(graded(b.entries));
+      if (avgA === null && avgB === null) return 0;
+      if (avgA === null) return 1;
+      if (avgB === null) return -1;
+      return (avgA - avgB) * dir;
+    });
+  } else if (state.subjectSort === "growth") {
+    list.sort((a, b) => {
+      const gA = getGrowth(graded(a.entries)).delta;
+      const gB = getGrowth(graded(b.entries)).delta;
+      if (gA === null && gB === null) return 0;
+      if (gA === null) return 1;
+      if (gB === null) return -1;
+      return (gA - gB) * dir;
+    });
+  }
+  return list;
+}
+
+function overallAverage() {
+  const avgs = state.subjects.map((s) => average(graded(s.entries))).filter((v) => v !== null);
+  if (!avgs.length) return null;
+  return avgs.reduce((sum, v) => sum + v, 0) / avgs.length;
+}
+
+function overallGoal() {
+  const goals = state.subjects.map((s) => s.goal).filter((v) => v !== null && v !== undefined);
+  if (!goals.length) return null;
+  return goals.reduce((sum, v) => sum + v, 0) / goals.length;
+}
+
+function upcomingEntriesAll() {
+  const list = [];
+  state.subjects.forEach((s) => {
+    s.entries.filter((e) => e.upcoming).forEach((e) => list.push({ ...e, subjectId: s.id, subjectName: s.name, subjectColor: s.color }));
+  });
+  return list.sort((a, b) => a.date.localeCompare(b.date));
+}
+
+function daysUntil(dateStr) {
+  const today = new Date(todayISO() + "T00:00:00");
+  const target = new Date(dateStr + "T00:00:00");
+  return Math.round((target - today) / 86400000);
 }
 
 function linearRegression(points) {
@@ -884,6 +1102,7 @@ function renderChartsTab() {
   const sc = scaleDef();
   return `
     <div class="summary-strip">
+      ${renderAggregateCard()}
       ${state.subjects.map(renderSummaryCard).join("") || `<p class="empty-state-mini">${escapeHtml(t('ui.noSubjects'))}</p>`}
     </div>
 
@@ -898,7 +1117,7 @@ function renderChartsTab() {
       <div class="toggle-group">
         <label class="gt-toggle"><input type="checkbox" id="toggleAverages" ${state.showAverages ? "checked" : ""}/> <span>${escapeHtml(t('ui.toggleAverages'))}</span></label>
         <label class="gt-toggle"><input type="checkbox" id="toggleGoals" ${state.showGoals ? "checked" : ""}/> <span>${escapeHtml(t('ui.toggleGoals'))}</span></label>
-        
+        <label class="gt-toggle"><input type="checkbox" id="toggleOverallAverage" ${state.showOverallAverage ? "checked" : ""}/> <span>${escapeHtml(t('ui.overallAverage'))}</span></label>
       </div>
     </div>
 
@@ -907,10 +1126,25 @@ function renderChartsTab() {
   `;
 }
 
+function renderAggregateCard() {
+  if (state.subjects.length < 2) return "";
+  const avg = overallAverage();
+  const goal = overallGoal();
+  return `
+    <div class="aggregate-card">
+      <div class="summary-card-top">${icon("grid", 13)} ${escapeHtml(t('ui.allSubjects'))}</div>
+      <div class="summary-card-mid">
+        <span class="summary-card-avg">${formatGrade(avg)}</span>
+        <span class="letter-grade">${escapeHtml(letterOrDescriptor(avg))}</span>
+      </div>
+      ${goal !== null ? `<span class="summary-card-goal">${icon("target", 11)} ${escapeHtml(t('ui.overallGoal'))} ${formatGrade(goal)}</span>` : ""}
+    </div>`;
+}
+
 function renderSummaryCard(s) {
-  const avg = average(s.entries);
+  const avg = average(graded(s.entries));
   const goalLine = s.goal !== null && s.goal !== undefined
-    ? `<span class="summary-card-goal">${icon("target", 11)} ${escapeHtml(t('ui.testsQuizzes'))} ${formatGrade(s.goal)}</span>` : "";
+    ? `<span class="summary-card-goal">${icon("target", 11)} ${escapeHtml(t('ui.goalLabel'))} ${formatGrade(s.goal)}</span>` : "";
   return `
     <div class="summary-card" style="--accent:${s.color}">
       <div class="summary-card-top"><span class="subject-dot-sm" style="background:${s.color}"></span>${escapeHtml(s.name)}</div>
@@ -918,7 +1152,7 @@ function renderSummaryCard(s) {
         <span class="summary-card-avg">${formatGrade(avg)}</span>
         <span class="letter-grade">${escapeHtml(letterOrDescriptor(avg))}</span>
       </div>
-      ${growthBadgeHtml(s.entries)}
+      ${growthBadgeHtml(graded(s.entries))}
       ${goalLine}
     </div>`;
 }
@@ -938,7 +1172,7 @@ function renderChartPanel(type, title, iconName) {
 ====================================================================== */
 function buildSeries(subject, type) {
   return subject.entries
-    .filter((e) => e.type === type)
+    .filter((e) => e.type === type && !e.upcoming)
     .sort((a, b) => a.date.localeCompare(b.date));
 }
 
@@ -1088,8 +1322,49 @@ function renderOneChart(type) {
         });
       }
 
- 
+      if (state.showTrend && series.length >= 2) {
+        const pts = series.map((e, i) => ({ x: i, y: e.value }));
+        const reg = linearRegression(pts);
+        if (reg) {
+          const trendByDate = dates.map((d) => {
+            const idx = series.findIndex((e) => e.date === d);
+            if (idx === -1) return null;
+            return reg.slope * idx + reg.intercept;
+          });
+          datasets.push({
+            label: `${s.name} trend`,
+            data: trendByDate,
+            borderColor: s.color,
+            borderDash: [1, 2],
+            borderWidth: 1.5,
+            pointRadius: 0,
+            spanGaps: true,
+            isReference: true,
+            order: 4,
+          });
+        }
+      }
     });
+
+    if (state.showOverallAverage && visibleSubjects.length > 1) {
+      const perSubjectAvgs = visibleSubjects
+        .map((s) => average(buildSeries(s, type)))
+        .filter((v) => v !== null);
+      if (perSubjectAvgs.length > 1) {
+        const overallAvg = perSubjectAvgs.reduce((sum, v) => sum + v, 0) / perSubjectAvgs.length;
+        datasets.push({
+          label: t('ui.allSubjects'),
+          data: dates.map(() => overallAvg),
+          borderColor: "#1B2A41",
+          borderDash: [7, 3],
+          borderWidth: 2,
+          pointRadius: 0,
+          spanGaps: true,
+          isReference: true,
+          order: 0,
+        });
+      }
+    }
 
     const sc = scaleDef();
 
@@ -1141,7 +1416,10 @@ function renderOneChart(type) {
         plugins: {
           legend: {
             labels: {
-              filter: (item) => !item.text.endsWith(" avg") && !item.text.endsWith(" goal") && !item.text.endsWith(" trend"),
+              filter: (item, data) => {
+                const ds = data.datasets[item.datasetIndex];
+                return !ds || !ds.isReference;
+              },
               font: { family: "monospace", size: 12 },
               color: "#44546B",
             },
@@ -1170,6 +1448,54 @@ function renderOneChart(type) {
 /* ======================================================================
    RENDER: MANAGE TAB
 ====================================================================== */
+function renderUpcomingPanel() {
+  if (!state.subjects.length) {
+    return `<div class="empty-state-mini"><p>${escapeHtml(t('ui.noSubjects'))}</p></div>`;
+  }
+  const upcoming = upcomingEntriesAll();
+  return `
+    <form id="addUpcomingForm" class="add-entry-form" style="margin-bottom:14px;">
+      <div class="add-entry-grid">
+        <label class="field">
+          <span>${escapeHtml(t('ui.subject'))}</span>
+          <select id="upcomingSubject">
+            ${state.subjects.map((s) => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join("")}
+          </select>
+        </label>
+        <label class="field">
+          <span>${escapeHtml(t('ui.testDate'))}</span>
+          <input type="date" id="upcomingDate" value="${todayISO()}" />
+        </label>
+        <label class="field field-wide">
+          <span>${escapeHtml(t('ui.labelOptional'))}</span>
+          <input type="text" id="upcomingLabel" placeholder="${escapeHtml(t('ui.upcomingPlaceholder'))}" />
+        </label>
+      </div>
+      <button type="submit" class="btn-secondary" style="align-self:flex-start;">${icon("calendar", 14)} ${escapeHtml(t('ui.addUpcomingBtn'))}</button>
+    </form>
+    ${!upcoming.length ? `<p class="empty-state-mini">${escapeHtml(t('ui.noUpcoming'))}</p>` : `
+      <div class="upcoming-list">
+        ${upcoming.map((e) => {
+          const days = daysUntil(e.date);
+          let chip;
+          if (days < 0) chip = t('ui.overdue');
+          else if (days === 0) chip = t('ui.today');
+          else if (days === 1) chip = t('ui.dayAway');
+          else chip = t('ui.daysAway', { days });
+          return `
+          <div class="upcoming-row">
+            <span class="upcoming-row-date">${fmtDate(e.date)}</span>
+            <span class="upcoming-row-subject"><span class="subject-dot-sm" style="background:${e.subjectColor}"></span>${escapeHtml(e.subjectName)}</span>
+            <span class="upcoming-row-label">${escapeHtml(e.label || "—")}</span>
+            <span class="countdown-chip">${escapeHtml(chip)}</span>
+            <button type="button" class="icon-btn icon-btn-danger" data-action="delete-entry" data-subject="${e.subjectId}" data-entry="${e.id}" title="${escapeHtml(t('ui.deleteConfirm'))}">${icon("x", 13)}</button>
+          </div>`;
+        }).join("")}
+      </div>
+    `}
+  `;
+}
+
 function renderManageTab() {
   return `
     <section class="panel">
@@ -1178,13 +1504,33 @@ function renderManageTab() {
     </section>
 
     <section class="panel">
+      <h2 class="panel-title">${escapeHtml(t('ui.upcomingTests'))}</h2>
+      ${renderUpcomingPanel()}
+    </section>
+
+    <section class="panel">
       <h2 class="panel-title">${escapeHtml(t('ui.subjects'))}</h2>
-      <div class="subject-rows">
-        ${state.subjects.map(renderSubjectRow).join("")}
+      <div class="subject-list-toolbar">
+        <div class="sort-control">
+          <span>${escapeHtml(t('ui.sortBy'))}</span>
+          <select id="subjectSortSelect">
+            <option value="manual" ${state.subjectSort === 'manual' ? 'selected' : ''}>${escapeHtml(t('ui.sortManual'))}</option>
+            <option value="name" ${state.subjectSort === 'name' ? 'selected' : ''}>${escapeHtml(t('ui.sortName'))}</option>
+            <option value="average" ${state.subjectSort === 'average' ? 'selected' : ''}>${escapeHtml(t('ui.sortAverage'))}</option>
+            <option value="growth" ${state.subjectSort === 'growth' ? 'selected' : ''}>${escapeHtml(t('ui.sortGrowth'))}</option>
+          </select>
+          ${state.subjectSort !== 'manual' ? `
+          <button class="sort-direction-btn" id="subjectSortDirBtn" title="${escapeHtml(state.subjectSortDir === 'asc' ? t('ui.sortAscending') : t('ui.sortDescending'))}">
+            ${icon(state.subjectSortDir === 'asc' ? 'sortAsc' : 'sortDesc', 15)}
+          </button>` : ""}
+        </div>
+      </div>
+      <div class="subject-rows" id="subjectRowsList">
+        ${sortedSubjects().map(renderSubjectRow).join("")}
       </div>
       <form id="addSubjectForm" class="add-subject-form">
         <span class="subject-dot-sm" id="nextColorDot" style="background:${nextColor()}"></span>
-        <input type="text" id="newSubjectName" AutoCompleteType=false placeholder="${escapeHtml(t('ui.newSubjectPlaceholder'))}" />
+        <input type="text" id="newSubjectName" autocomplete="off" placeholder="${escapeHtml(t('ui.newSubjectPlaceholder'))}" />
         <button type="submit" class="btn-secondary">${icon("plus", 14)} ${escapeHtml(t('ui.add'))}</button>
       </form>
     </section>
@@ -1192,7 +1538,7 @@ function renderManageTab() {
     <section class="panel">
       <h2 class="panel-title">${escapeHtml(t('ui.allEntries'))}</h2>
       ${state.subjects.length === 0 ? `<p class="empty-state-mini">${escapeHtml(t('ui.noSubjects'))}</p>` :
-        `<div class="subject-details">${state.subjects.map(renderSubjectDetail).join("")}</div>`}
+        `<div class="subject-details">${sortedSubjects().map(renderSubjectDetail).join("")}</div>`}
     </section>
   `;
 }
@@ -1231,13 +1577,19 @@ function renderAddEntryForm() {
           <input type="date" id="entryDate" value="${todayISO()}" />
         </label>
         <label class="field">
-          <span>${escapeHtml(t('ui.addGradeBtn'))}</span>
+          <span>${escapeHtml(t('ui.grade'))}</span>
           <input type="text" id="entryValue" placeholder="${escapeHtml(state.scale === 'finnish' ? t('ui.gradePlaceholderFinnish') : t('ui.gradePlaceholderHundred'))}" />
         </label>
         <label class="field field-wide">
           <span>${escapeHtml(t('ui.labelOptional'))}</span>
           <input type="text" id="entryLabel" placeholder="${escapeHtml(t('ui.labelOptional'))}" />
         </label>
+        <div class="field field-wide">
+          <span>${escapeHtml(t('ui.selfAssessmentOptional'))}</span>
+          <div class="smiley-picker" id="smileyPicker">
+            ${SMILEY_EMOJI.map((emoji, i) => `<button type="button" class="smiley-btn" data-smiley="${i}" title="${escapeHtml(SMILEY_TITLES[i]())}">${emoji}</button>`).join("")}
+          </div>
+        </div>
         <label class="field field-wide">
           <span>${escapeHtml(t('ui.noteOptional'))}</span>
           <textarea id="entryNote" placeholder="${escapeHtml(t('ui.noteOptional'))}"></textarea>
@@ -1252,20 +1604,24 @@ function renderAddEntryForm() {
 
 function renderSubjectRow(s) {
   const visible = state.visibleIds.has(s.id);
+  const hasGoal = s.goal !== null && s.goal !== undefined;
   return `
-    <div class="subject-row" data-subject-id="${s.id}">
-      <button class="subject-visibility ${visible ? '' : 'subject-visibility-off'}" data-action="toggle-visible" data-id="${s.id}" title="${escapeHtml(visible ? t('ui.testsQuizzes') : t('ui.testsQuizzes'))}">
+    <div class="subject-row" data-subject-id="${s.id}" draggable="${state.subjectSort === 'manual' ? 'true' : 'false'}">
+      ${state.subjectSort === 'manual' ? `<span class="drag-handle" title="${escapeHtml(t('ui.dragToReorder'))}">${icon("dragHandle", 16)}</span>` : ""}
+      <button class="subject-visibility ${visible ? '' : 'subject-visibility-off'}" data-action="toggle-visible" data-id="${s.id}" title="${escapeHtml(t('ui.toggleVisibility'))}">
         <span class="subject-dot" style="background:${visible ? s.color : 'var(--ink-faint)'}"></span>
       </button>
-      <button class="subject-name" data-action="rename" data-id="${s.id}">${escapeHtml(s.name)}</button>
-      <div class="subject-goal-input">
+      <button class="subject-name-dashed" data-action="rename" data-id="${s.id}" title="${escapeHtml(t('ui.renameHint'))}">${escapeHtml(s.name)}</button>
+      <div class="subject-goal-input ${hasGoal ? 'has-goal' : ''}">
         ${icon("target", 12)}
-        <input type="text" value="${s.goal ?? ''}" placeholder="${escapeHtml(t('ui.add'))}" data-action="set-goal" data-id="${s.id}" />
+        <span class="goal-label">${escapeHtml(t('ui.goalLabel'))}</span>
+        <input type="text" value="${hasGoal ? formatGrade(s.goal) : ''}" placeholder="${escapeHtml(t('ui.goalPlaceholder'))}" data-action="set-goal" data-id="${s.id}" title="${escapeHtml(t('ui.goalHint'))}" />
+        ${hasGoal ? `<button type="button" class="goal-clear-btn" data-action="clear-goal" data-id="${s.id}" title="${escapeHtml(t('ui.clearGoal'))}">${icon("x", 12)}</button>` : ""}
       </div>
-      <div class="subject-row-growth">${growthBadgeHtml(s.entries, "sm")}</div>
+      <div class="subject-row-growth">${growthBadgeHtml(graded(s.entries), "sm")}</div>
       <div class="subject-row-actions">
         <div class="color-picker-anchor">
-          <button class="icon-btn" data-action="open-color" data-id="${s.id}" title="${escapeHtml(t('ui.add'))}">
+          <button class="icon-btn" data-action="open-color" data-id="${s.id}" title="${escapeHtml(t('ui.chooseColor'))}">
             <span style="color:${s.color}">${icon("palette", 15)}</span>
           </button>
         </div>
@@ -1276,9 +1632,10 @@ function renderSubjectRow(s) {
 }
 
 function renderSubjectDetail(s) {
-  const avg = average(s.entries);
-  const tests = s.entries.filter((e) => e.type === TYPES.TEST);
+  const avg = average(graded(s.entries));
+  const tests = s.entries.filter((e) => e.type === TYPES.TEST && !e.upcoming);
   const reports = s.entries.filter((e) => e.type === TYPES.REPORT);
+  const upcoming = s.entries.filter((e) => e.upcoming);
   return `
     <div class="subject-detail" data-subject-id="${s.id}">
       <button class="subject-detail-toggle" data-action="toggle-detail" data-id="${s.id}">
@@ -1287,8 +1644,9 @@ function renderSubjectDetail(s) {
         <span class="subject-detail-name">${escapeHtml(s.name)}</span>
         <span class="subject-detail-stats">
           <span class="letter-grade">${escapeHtml(letterOrDescriptor(avg))}</span>
-          <span class="subject-detail-avg">${escapeHtml(t('ui.allEntries'))} ${formatGrade(avg)}</span>
-          ${growthBadgeHtml(s.entries, "sm")}
+          <span class="subject-detail-avg">avg ${formatGrade(avg)}</span>
+          ${growthBadgeHtml(graded(s.entries), "sm")}
+          ${upcoming.length ? `<span class="upcoming-badge">${icon("calendar", 10)} ${upcoming.length}</span>` : ""}
         </span>
       </button>
       <div class="subject-detail-body" style="display:none;">
@@ -1303,6 +1661,15 @@ function renderSubjectDetail(s) {
   `;
 }
 
+const SMILEY_EMOJI = ["😩", "😕", "😐", "🙂", "😄"];
+const SMILEY_TITLES = [
+  () => t('ui.smileyAwful'),
+  () => t('ui.smileyBad'),
+  () => t('ui.smileyOkay'),
+  () => t('ui.smileyGood'),
+  () => t('ui.smileyGreat'),
+];
+
 function renderEntryList(s, filter) {
   const sorted = [...s.entries].sort((a, b) => b.date.localeCompare(a.date));
   const filtered = filter === "all" ? sorted : sorted.filter((e) => e.type === filter);
@@ -1314,9 +1681,12 @@ function renderEntryList(s, filter) {
           <span class="entry-date">${fmtDate(e.date)}</span>
           <span class="entry-type entry-type-${e.type}">${e.type === TYPES.TEST ? escapeHtml(t('ui.testLabel')) : escapeHtml(t('ui.reportLabel'))}</span>
           <span class="entry-label">${escapeHtml(e.label || "—")}</span>
-          <span class="entry-value">${formatGrade(e.value)}</span>
+          <span class="entry-value">${e.upcoming
+            ? `<span class="upcoming-badge">${icon("calendar", 10)} ${escapeHtml(t('ui.entryTypeUpcoming'))}</span>`
+            : `${formatGrade(e.value)}${(e.smiley !== null && e.smiley !== undefined) ? `<span class="entry-smiley">${SMILEY_EMOJI[e.smiley]}</span>` : ""}`}</span>
           <button class="icon-btn icon-btn-danger" data-action="delete-entry" data-subject="${s.id}" data-entry="${e.id}" title="${escapeHtml(t('ui.deleteConfirm'))}">${icon("x", 13)}</button>
         </li>
+        ${e.upcoming ? `<li class="entry-row-note"><button type="button" class="btn-ghost" data-action="convert-upcoming" data-subject="${s.id}" data-entry="${e.id}" style="padding:2px 8px; font-size:11px;">${icon("check", 11)} ${escapeHtml(t('ui.convertUpcoming'))}</button></li>` : ""}
         ${e.note ? `<li class="entry-row-note">${icon("note", 11)} ${escapeHtml(e.note)}</li>` : ""}
       `).join("")}
     </ul>
@@ -1348,12 +1718,32 @@ function renderSettingsTab() {
     </section>
 
     <section class="panel">
+      <h2 class="panel-title">${escapeHtml(t('ui.toggleAverages'))}</h2>
+      <div class="settings-row">
+        <div class="settings-row-label">${escapeHtml(t('ui.toggleAverages'))}</div>
+        <label class="gt-toggle"><input type="checkbox" id="settingsToggleAverages" ${state.showAverages ? "checked" : ""}/></label>
+      </div>
+      <div class="settings-row">
+        <div class="settings-row-label">${escapeHtml(t('ui.toggleGoals'))}</div>
+        <label class="gt-toggle"><input type="checkbox" id="settingsToggleGoals" ${state.showGoals ? "checked" : ""}/></label>
+      </div>
+      <div class="settings-row">
+        <div class="settings-row-label">${escapeHtml(t('ui.overallAverage'))}</div>
+        <label class="gt-toggle"><input type="checkbox" id="settingsToggleOverallAverage" ${state.showOverallAverage ? "checked" : ""}/></label>
+      </div>
+      <div class="settings-row">
+        <div class="settings-row-label">${escapeHtml(t('ui.toggleTrend'))}</div>
+        <label class="gt-toggle"><input type="checkbox" id="settingsToggleTrend" ${state.showTrend ? "checked" : ""}/></label>
+      </div>
+    </section>
+
+    <section class="panel">
       <h2 class="panel-title">${escapeHtml(t('ui.backupSection'))}</h2>
-      <p class="settings-row-desc" style="margin-bottom:14px;">${escapeHtml(t('ui.backupSection'))}</p>
+      <p class="settings-row-desc" style="margin-bottom:14px;">${escapeHtml(t('ui.backupSectionDesc'))}</p>
       <div class="import-export-row">
-        <button class="btn-secondary" id="exportJsonBtn">${icon("upload", 14)} ${escapeHtml(t('ui.exportJson'))}</button>
-        <button class="btn-secondary" id="exportCsvBtn">${icon("upload", 14)} ${escapeHtml(t('ui.exportCsv'))}</button>
-        <button class="btn-secondary" id="importBtn">${icon("download", 14)} ${escapeHtml(t('ui.importJson'))}</button>
+        <button class="btn-secondary" id="exportJsonBtn">${icon("download", 14)} ${escapeHtml(t('ui.exportJson'))}</button>
+        <button class="btn-secondary" id="exportCsvBtn">${icon("download", 14)} ${escapeHtml(t('ui.exportCsv'))}</button>
+        <button class="btn-secondary" id="importBtn">${icon("upload", 14)} ${escapeHtml(t('ui.importJson'))}</button>
         <input type="file" id="importFile" accept="application/json" />
       </div>
     </section>
@@ -1381,10 +1771,19 @@ function exportJson() {
 }
 
 function exportCsv() {
-  const rows = [["subject", "type", "date", "value", "label", "note"]];
+  const rows = [["subject", "type", "date", "value", "label", "note", "smiley", "upcoming"]];
   state.subjects.forEach((s) => {
     s.entries.forEach((e) => {
-      rows.push([s.name, e.type, e.date, formatGrade(e.value), e.label || "", e.note || ""]);
+      rows.push([
+        s.name,
+        e.type,
+        e.date,
+        e.upcoming ? "" : formatGrade(e.value),
+        e.label || "",
+        e.note || "",
+        (e.smiley !== null && e.smiley !== undefined) ? e.smiley : "",
+        e.upcoming ? "yes" : "no",
+      ]);
     });
   });
   const csv = rows.map((r) => r.map(csvEscape).join(",")).join("\n");
@@ -1430,10 +1829,12 @@ function importJsonFile(file) {
             entries: (s.entries || []).map((e) => ({
               id: e.id || uid(),
               date: e.date,
-              value: e.value,
+              value: e.value ?? null,
               type: e.type === TYPES.REPORT ? TYPES.REPORT : TYPES.TEST,
               label: e.label || "",
               note: e.note || "",
+              smiley: (e.smiley !== undefined && e.smiley !== null) ? e.smiley : null,
+              upcoming: !!e.upcoming,
             })),
           }));
           if (data.scale && SCALES[data.scale]) state.scale = data.scale;
@@ -1465,12 +1866,98 @@ function attachHandlers() {
     });
   });
 
+  const sortSelect = document.getElementById("subjectSortSelect");
+  if (sortSelect) {
+    sortSelect.addEventListener("change", (e) => {
+      state.subjectSort = e.target.value;
+      persist();
+      render();
+    });
+  }
+  const sortDirBtn = document.getElementById("subjectSortDirBtn");
+  if (sortDirBtn) {
+    sortDirBtn.addEventListener("click", () => {
+      state.subjectSortDir = state.subjectSortDir === "asc" ? "desc" : "asc";
+      persist();
+      render();
+    });
+  }
+
+  // drag-and-drop manual reordering (only active when sort mode is "manual")
+  const subjectRowsList = document.getElementById("subjectRowsList");
+  if (subjectRowsList && state.subjectSort === "manual") {
+    let dragId = null;
+    subjectRowsList.querySelectorAll(".subject-row").forEach((row) => {
+      row.addEventListener("dragstart", (e) => {
+        dragId = row.dataset.subjectId;
+        row.classList.add("dragging");
+        e.dataTransfer.effectAllowed = "move";
+      });
+      row.addEventListener("dragend", () => {
+        row.classList.remove("dragging");
+        subjectRowsList.querySelectorAll(".subject-row").forEach((r) => r.classList.remove("drag-over"));
+      });
+      row.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        if (row.dataset.subjectId !== dragId) row.classList.add("drag-over");
+      });
+      row.addEventListener("dragleave", () => row.classList.remove("drag-over"));
+      row.addEventListener("drop", (e) => {
+        e.preventDefault();
+        row.classList.remove("drag-over");
+        const targetId = row.dataset.subjectId;
+        if (!dragId || dragId === targetId) return;
+        const fromIdx = state.subjects.findIndex((s) => s.id === dragId);
+        const toIdx = state.subjects.findIndex((s) => s.id === targetId);
+        if (fromIdx === -1 || toIdx === -1) return;
+        const [moved] = state.subjects.splice(fromIdx, 1);
+        state.subjects.splice(toIdx, 0, moved);
+        persist();
+        render();
+      });
+    });
+  }
+
+  root.querySelectorAll('[data-action="convert-upcoming"]').forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const subjectId = btn.dataset.subject;
+      const entryId = btn.dataset.entry;
+      const subject = state.subjects.find((s) => s.id === subjectId);
+      const entry = subject.entries.find((e) => e.id === entryId);
+      if (!entry) return;
+      // pre-fill the Log a grade form with this entry's subject/date/label and switch focus there
+      const subjSel = document.getElementById("entrySubject");
+      if (subjSel) subjSel.value = subjectId;
+      const dateInput = document.getElementById("entryDate");
+      if (dateInput) dateInput.value = entry.date;
+      const labelInput = document.getElementById("entryLabel");
+      if (labelInput) labelInput.value = entry.label || "";
+      const valueInput = document.getElementById("entryValue");
+      if (valueInput) valueInput.focus();
+      // remove the upcoming placeholder; the new graded entry will be added on submit
+      subject.entries = subject.entries.filter((e) => e.id !== entryId);
+      persist();
+      document.querySelector(".panel")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  });
+
   const avgToggle = document.getElementById("toggleAverages");
   if (avgToggle) avgToggle.addEventListener("change", (e) => { state.showAverages = e.target.checked; persist(); renderCharts(); });
   const goalToggle = document.getElementById("toggleGoals");
   if (goalToggle) goalToggle.addEventListener("change", (e) => { state.showGoals = e.target.checked; persist(); renderCharts(); });
   const trendToggle = document.getElementById("toggleTrend");
   if (trendToggle) trendToggle.addEventListener("change", (e) => { state.showTrend = e.target.checked; persist(); renderCharts(); });
+  const overallToggle = document.getElementById("toggleOverallAverage");
+  if (overallToggle) overallToggle.addEventListener("change", (e) => { state.showOverallAverage = e.target.checked; persist(); render(); });
+
+  const sAvg = document.getElementById("settingsToggleAverages");
+  if (sAvg) sAvg.addEventListener("change", (e) => { state.showAverages = e.target.checked; persist(); });
+  const sGoals = document.getElementById("settingsToggleGoals");
+  if (sGoals) sGoals.addEventListener("change", (e) => { state.showGoals = e.target.checked; persist(); });
+  const sOverall = document.getElementById("settingsToggleOverallAverage");
+  if (sOverall) sOverall.addEventListener("change", (e) => { state.showOverallAverage = e.target.checked; persist(); });
+  const sTrend = document.getElementById("settingsToggleTrend");
+  if (sTrend) sTrend.addEventListener("change", (e) => { state.showTrend = e.target.checked; persist(); });
 
   const scaleToggle = document.getElementById("scaleToggle");
   if (scaleToggle) {
@@ -1525,6 +2012,7 @@ function attachHandlers() {
   const addEntryForm = document.getElementById("addEntryForm");
   if (addEntryForm) {
     let entryType = TYPES.TEST;
+    let selectedSmiley = null;
     const seg = document.getElementById("entryTypeSeg");
     seg.querySelectorAll("button").forEach((btn) => {
       btn.addEventListener("click", () => {
@@ -1532,6 +2020,17 @@ function attachHandlers() {
         seg.querySelectorAll("button").forEach((b) => b.classList.toggle("segmented-active", b === btn));
       });
     });
+
+    const smileyPicker = document.getElementById("smileyPicker");
+    if (smileyPicker) {
+      smileyPicker.querySelectorAll(".smiley-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const idx = parseInt(btn.dataset.smiley, 10);
+          selectedSmiley = selectedSmiley === idx ? null : idx;
+          smileyPicker.querySelectorAll(".smiley-btn").forEach((b) => b.classList.toggle("smiley-selected", parseInt(b.dataset.smiley, 10) === selectedSmiley));
+        });
+      });
+    }
 
     addEntryForm.addEventListener("submit", (e) => {
       e.preventDefault();
@@ -1563,7 +2062,7 @@ function attachHandlers() {
       }
 
       const subject = state.subjects.find((s) => s.id === subjectId);
-      subject.entries.push({ id: uid(), date, value: parsed, type: entryType, label, note });
+      subject.entries.push({ id: uid(), date, value: parsed, type: entryType, label, note, smiley: selectedSmiley, upcoming: false });
       persist();
 
       msgEl.innerHTML = `<div class="form-success">${icon("check", 13)} ${escapeHtml(t('ui.addedEntrySuccessForm', { value: formatGrade(parsed), subject: subject.name }))}</div>`;
@@ -1571,6 +2070,22 @@ function attachHandlers() {
       document.getElementById("entryLabel").value = "";
       document.getElementById("entryNote").value = "";
       render();
+    });
+  }
+
+  const addUpcomingForm = document.getElementById("addUpcomingForm");
+  if (addUpcomingForm) {
+    addUpcomingForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const subjectId = document.getElementById("upcomingSubject").value;
+      const date = document.getElementById("upcomingDate").value;
+      const label = document.getElementById("upcomingLabel").value.trim();
+      if (!subjectId || !date) return;
+      const subject = state.subjects.find((s) => s.id === subjectId);
+      subject.entries.push({ id: uid(), date, value: null, type: TYPES.TEST, label, note: "", smiley: null, upcoming: true });
+      persist();
+      render();
+      showToast(`${icon("check", 14)} ${escapeHtml(t('ui.addedUpcomingToast', { label: label || t('ui.entryTypeUpcoming'), subject: subject.name }))}`);
     });
   }
 
@@ -1582,10 +2097,24 @@ function attachHandlers() {
       const name = input.value.trim();
       if (!name) return;
       const s = { id: uid(), name, color: nextColor(), goal: null, entries: [] };
+      // remember current vertical scroll so render doesn't snap the viewport to top
+      const prevScroll = window.scrollY || document.documentElement.scrollTop || 0;
       state.subjects.push(s);
       state.visibleIds.add(s.id);
       persist();
       render();
+      // restore scroll and re-focus the new-subject input so user can keep typing
+      setTimeout(() => {
+        try {
+          window.scrollTo(0, prevScroll);
+          const newInput = document.getElementById("newSubjectName");
+          if (newInput) {
+            newInput.focus();
+            newInput.value = "";
+            newInput.setSelectionRange(0, 0);
+          }
+        } catch (err) { /* ignore */ }
+      }, 40);
       showToast(`${icon("check", 14)} ${escapeHtml(t('ui.addedSubjectToast', { name }))}`);
     });
   }
@@ -1594,11 +2123,12 @@ function attachHandlers() {
     btn.addEventListener("click", () => {
       const id = btn.dataset.id;
       const subject = state.subjects.find((s) => s.id === id);
-      const row = btn.closest(".subject-row");
-      const input = document.createElement("input");
-      input.className = "subject-name-input";
+      const wrap = document.createElement("div");
+      wrap.className = "subject-name-editing-wrap";
+      wrap.innerHTML = `<span class="name-dash">—</span><input type="text" class="subject-name-input-dashed" /><span class="name-dash">—</span>`;
+      const input = wrap.querySelector("input");
       input.value = subject.name;
-      btn.replaceWith(input);
+      btn.replaceWith(wrap);
       input.focus();
       input.select();
       const commit = () => {
@@ -1619,13 +2149,22 @@ function attachHandlers() {
       const id = input.dataset.id;
       const subject = state.subjects.find((s) => s.id === id);
       const raw = input.value.trim();
-      if (!raw) { subject.goal = null; persist(); return; }
+      if (!raw) { subject.goal = null; persist(); render(); return; }
       const parsed = parseGradeInput(raw);
-      if (parsed === null) { input.value = subject.goal ?? ""; return; }
+      if (parsed === null) { input.value = subject.goal !== null && subject.goal !== undefined ? formatGrade(subject.goal) : ""; return; }
       subject.goal = clampToScale(parsed);
-      input.value = formatGrade(subject.goal);
       persist();
-      if (state.tab === "charts") renderCharts();
+      render();
+    });
+  });
+
+  root.querySelectorAll('[data-action="clear-goal"]').forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const id = btn.dataset.id;
+      const subject = state.subjects.find((s) => s.id === id);
+      subject.goal = null;
+      persist();
+      render();
     });
   });
 
@@ -1759,12 +2298,15 @@ async function init() {
         name: s.name,
         color: s.color,
         goal: s.goal ?? null,
-        entries: (s.entries || []).map((e) => ({ note: "", ...e })),
+        entries: (s.entries || []).map((e) => ({ note: "", smiley: null, upcoming: false, ...e })),
       }));
       state.scale = data.scale && SCALES[data.scale] ? data.scale : state.scale;
       state.showAverages = data.showAverages !== undefined ? data.showAverages : state.showAverages;
       state.showGoals = data.showGoals !== undefined ? data.showGoals : state.showGoals;
       state.showTrend = !!data.showTrend;
+      state.showOverallAverage = data.showOverallAverage !== undefined ? data.showOverallAverage : state.showOverallAverage;
+      state.subjectSort = data.subjectSort || "manual";
+      state.subjectSortDir = data.subjectSortDir || "asc";
       state.visibleIds = data.visibleIds && data.visibleIds.length ? new Set(data.visibleIds) : new Set(state.subjects.map((s) => s.id));
     } else {
       state.subjects = makeDefaultSubjects(state.scale);
