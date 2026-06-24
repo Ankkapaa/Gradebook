@@ -4,7 +4,6 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
 <title>Gradebook</title>
-<link rel="icon" type="image/x-icon" href="/images/favicon.ico">
 <style>
 /* ======================================================================
    DESIGN TOKENS
@@ -219,8 +218,8 @@ a { color: inherit; }
 .sort-direction-btn:hover { border-color: var(--ink); }
 .drag-handle { cursor: grab; color: var(--ink-faint); padding: 4px 2px; flex-shrink: 0; touch-action: none; }
 .drag-handle:active { cursor: grabbing; }
-.subject-row.dragging { opacity: 0.4; }
-.subject-row.drag-over { border-top: 2px solid var(--red); }
+.subject-row.dragging { opacity: 0.85; box-shadow: 0 6px 16px rgba(27,42,65,0.18); cursor: grabbing; position: relative; }
+.subject-row.settling { transition: transform 0.15s ease; }
 
 /* All-subjects aggregate card */
 .aggregate-card {
@@ -241,11 +240,138 @@ a { color: inherit; }
 /* Upcoming test badge */
 .upcoming-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; padding: 2px 7px; border-radius: 4px; background: var(--gold-soft); color: var(--gold); }
 .upcoming-list { display: flex; flex-direction: column; gap: 6px; }
-.upcoming-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1.5px dashed var(--rule-strong); border-radius: 8px; font-size: 13px; }
+.upcoming-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1.5px dashed var(--rule-strong); border-radius: 8px; font-size: 13px; flex-wrap: wrap; }
 .upcoming-row-date { font-family: var(--font-mono); font-weight: 700; color: var(--gold); min-width: 56px; }
-.upcoming-row-subject { display: flex; align-items: center; gap: 6px; font-weight: 600; flex: 1; }
-.upcoming-row-label { color: var(--ink-faint); font-size: 12px; flex: 1; }
+.upcoming-row-subject { display: flex; align-items: center; gap: 6px; font-weight: 600; flex: 1; min-width: 90px; }
+.upcoming-row-label { color: var(--ink-faint); font-size: 12px; flex: 1; min-width: 80px; }
 .countdown-chip { font-family: var(--font-mono); font-size: 11px; background: var(--rule); padding: 2px 7px; border-radius: 999px; color: var(--ink-soft); white-space: nowrap; }
+.tag-chip-row { display: flex; gap: 5px; flex-wrap: wrap; }
+.tag-chip { display: inline-flex; align-items: center; gap: 3px; font-family: var(--font-mono); font-size: 10.5px; background: var(--gold-soft); color: var(--gold); padding: 2px 7px; border-radius: 999px; white-space: nowrap; }
+.tag-chip[data-action="filter-tag-chip"] { cursor: pointer; border: 1px solid transparent; }
+.tag-chip[data-action="filter-tag-chip"]:hover { border-color: var(--gold); }
+
+/* Group dropdown + badges */
+.group-select-anchor { position: relative; flex-shrink: 0; }
+.group-select-btn {
+  display: inline-flex; align-items: center; gap: 5px; border: 1.5px solid var(--rule-strong); background: var(--paper);
+  border-radius: 7px; padding: 5px 8px; font-size: 11.5px; font-weight: 600; color: var(--ink-soft); cursor: pointer;
+  font-family: var(--font-body); white-space: nowrap; max-width: 120px;
+}
+.group-select-btn .group-select-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 80px; }
+.group-select-btn:hover { border-color: var(--ink); }
+.group-select-menu {
+  position: absolute; top: calc(100% + 6px); left: 0; background: var(--paper-raised); border: 1.5px solid var(--rule-strong);
+  border-radius: 10px; padding: 6px; box-shadow: 0 8px 24px rgba(27,42,65,0.18); z-index: 40; min-width: 170px;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.group-select-option {
+  display: flex; align-items: center; gap: 8px; border: none; background: transparent; border-radius: 7px;
+  padding: 7px 9px; font-size: 13px; cursor: pointer; text-align: left; font-family: var(--font-body); color: var(--ink);
+}
+.group-select-option:hover { background: var(--rule); }
+.group-select-option.selected { background: var(--gold-soft); color: var(--gold); font-weight: 700; }
+.group-select-divider { height: 1px; background: var(--rule); margin: 4px 2px; }
+.group-select-new { display: flex; gap: 6px; padding: 6px 4px 2px; }
+.group-select-new input { flex: 1; border: 1.5px solid var(--rule-strong); border-radius: 6px; padding: 5px 7px; font-size: 12.5px; background: var(--paper); }
+.group-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+.group-section { margin-bottom: 18px; }
+.group-section-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1.5px dashed var(--rule-strong); }
+.group-section-title { font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 0.03em; flex: 1; }
+.group-manage-row { display: flex; align-items: center; gap: 8px; padding: 7px 8px; border: 1.5px solid var(--rule); border-radius: 8px; margin-bottom: 6px; flex-wrap: wrap; }
+.group-nest-indicator { color: var(--ink-faint); flex-shrink: 0; display: flex; }
+.group-parent-select {
+  border: 1.5px solid var(--rule-strong); border-radius: 6px; padding: 4px 7px; font-size: 11.5px; background: var(--paper);
+  color: var(--ink-soft); font-family: var(--font-body); cursor: pointer; max-width: 130px;
+}
+.group-manage-row input { flex: 1; border: none; background: transparent; font-size: 13.5px; font-weight: 600; font-family: var(--font-body); color: var(--ink); }
+.group-manage-row input:focus { outline: none; border-bottom: 1.5px dashed var(--red); }
+.group-manage-count { font-size: 11px; color: var(--ink-faint); font-family: var(--font-mono); white-space: nowrap; }
+
+/* Dashboard group sections (collapsible, unlimited nesting) */
+.group-sections { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }
+.group-section {
+  border: 1.5px solid var(--rule-strong); border-radius: 12px; background: var(--paper-raised);
+  margin-left: calc(var(--depth, 0) * 16px);
+}
+.group-section-header {
+  width: 100%; display: flex; align-items: center; gap: 8px; background: transparent; border: none; cursor: pointer;
+  padding: 12px 14px; font-family: var(--font-body); text-align: left; flex-wrap: wrap;
+}
+.group-collapse-chevron { color: var(--ink-faint); flex-shrink: 0; display: flex; }
+.group-section-title { font-weight: 700; font-size: 14px; flex-shrink: 0; }
+.group-section-count { font-size: 11px; color: var(--ink-faint); font-family: var(--font-mono); background: var(--rule); padding: 1px 7px; border-radius: 999px; }
+.group-section-stats { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+.group-section-body { padding: 0 14px 14px; display: flex; flex-direction: column; gap: 10px; }
+.summary-strip-nested { margin: 0; }
+
+/* Embedded test search & filter panel (lives inside the Charts dashboard) */
+.test-search-panel { padding-bottom: 14px; }
+.test-search-toggle {
+  width: 100%; background: transparent; border: none; cursor: pointer; display: flex; align-items: center;
+  justify-content: space-between; padding: 0 0 14px; font-family: var(--font-display); font-size: 17px; font-weight: 600;
+  color: var(--ink); margin: 0; border-bottom: 1.5px solid var(--rule);
+}
+.test-search-toggle span:first-child { display: flex; align-items: center; gap: 8px; }
+.test-search-toggle .group-collapse-chevron { color: var(--ink-faint); }
+
+.test-search-bar { display: flex; align-items: center; gap: 8px; background: var(--paper); border: 1.5px solid var(--rule-strong); border-radius: 10px; padding: 9px 12px; margin: 14px 0 12px; }
+.test-search-bar svg { flex-shrink: 0; color: var(--ink-faint); }
+.test-search-bar input { flex: 1; border: none; background: transparent; font-size: 14px; font-family: var(--font-body); color: var(--ink); min-width: 0; }
+.test-search-bar input:focus { outline: none; }
+
+.test-filter-bar { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px; margin-bottom: 16px; }
+.test-filter-select {
+  border: 1.5px solid var(--rule-strong); border-radius: 8px; padding: 7px 9px; font-size: 12.5px; background: var(--paper-raised);
+  color: var(--ink); font-family: var(--font-body); cursor: pointer; height: 34px; box-sizing: border-box;
+}
+.test-filter-select.active-filter { border-color: var(--red); background: var(--red-soft); color: var(--red); font-weight: 700; }
+
+.test-filter-date-field { display: flex; flex-direction: column; gap: 3px; }
+.test-filter-date-field span { font-size: 10px; font-weight: 700; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.03em; }
+.test-filter-date {
+  border: 1.5px solid var(--rule-strong); border-radius: 8px; padding: 6px 8px; font-size: 12.5px; background: var(--paper-raised);
+  color: var(--ink); font-family: var(--font-body); cursor: pointer; height: 34px; box-sizing: border-box;
+  min-width: 132px; width: auto; line-height: 1.2; -webkit-appearance: none; appearance: none;
+}
+.test-filter-date::-webkit-calendar-picker-indicator { opacity: 0.6; cursor: pointer; }
+.test-filter-date.active-filter { border-color: var(--red); background: var(--red-soft); color: var(--red); }
+
+.home-filter-clear-btn {
+  display: inline-flex; align-items: center; gap: 5px; border: 1.5px solid var(--red); background: var(--paper-raised); color: var(--red);
+  border-radius: 8px; padding: 6px 10px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: var(--font-body); height: 34px; box-sizing: border-box;
+}
+.home-filter-clear-btn:hover { background: var(--red-soft); }
+
+.home-results-count { font-size: 12px; color: var(--ink-faint); margin-bottom: 10px; font-family: var(--font-mono); }
+
+.home-test-list { display: flex; flex-direction: column; gap: 8px; }
+.home-test-row {
+  display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1.5px solid var(--rule); border-radius: 10px;
+  background: var(--paper-raised); flex-wrap: wrap;
+}
+.home-test-row.is-upcoming { border-style: dashed; border-color: var(--gold); }
+.home-test-row-date { font-family: var(--font-mono); font-size: 12px; font-weight: 700; color: var(--ink-soft); min-width: 56px; }
+.home-test-row-subject { display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: 13.5px; min-width: 90px; }
+.home-test-row-label { color: var(--ink-soft); font-size: 13px; flex: 1; min-width: 100px; }
+.home-test-row-value { font-family: var(--font-mono); font-weight: 700; font-size: 15px; min-width: 50px; text-align: right; }
+.home-test-row-meta { display: flex; align-items: center; gap: 8px; flex-basis: 100%; margin-top: 2px; }
+.home-empty { text-align: center; padding: 40px 20px; color: var(--ink-faint); font-style: italic; font-family: var(--font-display); }
+.log-result-btn {
+  display: inline-flex; align-items: center; gap: 5px; border: 1.5px solid var(--sage); background: var(--sage-soft); color: var(--sage);
+  border-radius: 7px; padding: 5px 10px; font-size: 11.5px; font-weight: 700; cursor: pointer; font-family: var(--font-body); white-space: nowrap;
+}
+.log-result-btn:hover { background: var(--sage); color: var(--paper-raised); }
+.upcoming-row-actions { display: flex; align-items: center; gap: 4px; }
+.quick-log-form {
+  flex-basis: 100%; display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap;
+  border-top: 1.5px dashed var(--rule-strong); margin-top: 8px; padding-top: 10px;
+}
+.quick-log-form .field { min-width: 100px; }
+.quick-log-form .field input { padding: 7px 9px; font-size: 13px; }
+.quick-log-form .smiley-picker { gap: 4px; }
+.quick-log-form .smiley-btn { width: 30px; height: 30px; font-size: 15px; }
+.quick-log-cancel { background: transparent; border: none; color: var(--ink-faint); font-size: 12px; cursor: pointer; padding: 7px 4px; }
+.quick-log-cancel:hover { color: var(--red); }
 
 .color-picker-anchor { position: relative; }
 .color-picker {
@@ -414,6 +540,12 @@ function icon(name, size) {
     smile: `<circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9" y2="9.01"/><line x1="15" y1="9" x2="15" y2="9.01"/>`,
     sortAsc: `<path d="M11 5h10"/><path d="M11 9h7"/><path d="M11 13h4"/><path d="m3 17 3 3 3-3"/><path d="M6 18V4"/>`,
     sortDesc: `<path d="M11 5h4"/><path d="M11 9h7"/><path d="M11 13h10"/><path d="m3 7 3-3 3 3"/><path d="M6 6v14"/>`,
+    home: `<path d="M3 9l9-7 9 7"/><path d="M9 22V12h6v10"/><path d="M5 10v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V10"/>`,
+    folder: `<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/>`,
+    tag: `<path d="M12 2H2v10l9.29 9.29a1 1 0 0 0 1.42 0l8.58-8.58a1 1 0 0 0 0-1.42L12 2Z"/><circle cx="7" cy="7" r="1"/>`,
+    search: `<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>`,
+    filter: `<path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/>`,
+    chevronDownSm: `<polyline points="6 9 12 15 18 9"/>`,
   };
   return `<svg ${common}>${paths[name] || ''}</svg>`;
 }
@@ -520,6 +652,34 @@ const TRANSLATIONS = {
       markComplete: "Add grade for this test",
       selfAssessment: "How did it feel?",
       selfAssessmentOptional: "Self-assessment (optional)",
+      tagsOptional: "Tags (optional)",
+      tagsPlaceholder: "e.g. algebra, midterm",
+      assignGroup: "Assign to group",
+      noGroup: "No group",
+      newGroup: "New group",
+      newGroupPlaceholder: "Group name",
+      manageGroups: "Groups",
+      groupDeleteConfirmTitle: "Delete this group?",
+      groupDeleteConfirmBody: "Subjects in this group will become ungrouped. This cannot be undone.",
+      groupDeleteConfirmBodyWithChildren: "Its {count} subgroup(s) and any subjects will move up one level. This cannot be undone.",
+      noGroups: "No groups yet. Create one from a subject's group menu, or add one below.",
+      ungrouped: "Ungrouped",
+      parentGroup: "Parent group",
+      noParentGroup: "Top level",
+      directVsTotal: "direct / total subjects",
+      cannotNestCycle: "Can't nest a group inside its own subgroup.",
+      searchPlaceholder: "Search by subject or test name…",
+      allSubjectsFilter: "All subjects",
+      allTags: "All tags",
+      allFeelings: "All feelings",
+      dateFrom: "From",
+      dateTo: "To",
+      clearFilters: "Clear filters",
+      testsFound: "{count} test(s)",
+      noMatchingTests: "No tests match your filters.",
+      noTestsYet: "No tests logged yet. Add one from Manage.",
+      searchTests: "Search tests",
+      groupEmpty: "This group is empty.",
       smileyAwful: "Awful",
       smileyBad: "Not great",
       smileyOkay: "Okay",
@@ -529,7 +689,6 @@ const TRANSLATIONS = {
       addUpcomingBtn: "Schedule test",
       addedUpcomingToast: "Scheduled {label} for {subject}",
       convertUpcoming: "Log result",
-      upcomingPlaceholder: "e.g. Midterm, Quiz 1, Final",
     },
     scaleHint: {
       finnish: "Finnish scale 4–10. Try: 8, 8.5, 8½, 9+, 9-, 10+",
@@ -541,13 +700,13 @@ const TRANSLATIONS = {
     toast: { exported: "Exported", imported: "Imported" },
     descriptors: {
       finnish: {
-        10: "Excellent",
-        9: "Very good",
-        8: "Good",
-        7: "Satisfactory",
-        6: "Moderate",
-        5: "Adequate",
-        4: "Fail",
+        10: "excellent",
+        9: "very good",
+        8: "good",
+        7: "satisfactory",
+        6: "moderate",
+        5: "adequate",
+        4: "fail",
       },
     },
   },
@@ -622,7 +781,7 @@ const TRANSLATIONS = {
       resetSection: "Nollaa",
       scale: "Asteikko",
       goalLabel: "Tavoite",
-      goalPlaceholder: "ei",
+      goalPlaceholder: "ei mitään",
       goalHint: "Tämän aineen tavoitearvosana — näytetään pisteviivana kaaviossa",
       clearGoal: "Poista tavoite",
       renameHint: "Klikkaa nimetäksesi uudelleen",
@@ -649,6 +808,34 @@ const TRANSLATIONS = {
       markComplete: "Lisää arvosana tälle kokeelle",
       selfAssessment: "Miltä se tuntui?",
       selfAssessmentOptional: "Itsearviointi (valinnainen)",
+      tagsOptional: "Tagit (valinnainen)",
+      tagsPlaceholder: "esim. algebra, välikoe",
+      assignGroup: "Lisää ryhmään",
+      noGroup: "Ei ryhmää",
+      newGroup: "Uusi ryhmä",
+      newGroupPlaceholder: "Ryhmän nimi",
+      manageGroups: "Ryhmät",
+      groupDeleteConfirmTitle: "Poistetaanko tämä ryhmä?",
+      groupDeleteConfirmBody: "Ryhmän aineet jäävät ryhmättömiksi. Tätä ei voi peruuttaa.",
+      groupDeleteConfirmBodyWithChildren: "Sen {count} aliryhmä(ä) ja aineet siirtyvät yhden tason ylemmäs. Tätä ei voi peruuttaa.",
+      noGroups: "Ei ryhmiä vielä. Luo yksi aineen ryhmävalikosta tai lisää alla.",
+      ungrouped: "Ryhmättömät",
+      parentGroup: "Yläryhmä",
+      noParentGroup: "Ylin taso",
+      directVsTotal: "suoraan / yhteensä aineita",
+      cannotNestCycle: "Ryhmää ei voi sijoittaa omaan aliryhmäänsä.",
+      searchPlaceholder: "Hae aineen tai kokeen nimellä…",
+      allSubjectsFilter: "Kaikki aineet",
+      allTags: "Kaikki tagit",
+      allFeelings: "Kaikki tunnelmat",
+      dateFrom: "Alkaen",
+      dateTo: "Päättyen",
+      clearFilters: "Tyhjennä suodattimet",
+      testsFound: "{count} koe(tta)",
+      noMatchingTests: "Ei suodattimiin sopivia kokeita.",
+      noTestsYet: "Ei kirjattuja kokeita vielä. Lisää yksi Hallitse-välilehdellä.",
+      searchTests: "Hae kokeita",
+      groupEmpty: "Tämä ryhmä on tyhjä.",
       smileyAwful: "Surkea",
       smileyBad: "Ei hyvä",
       smileyOkay: "Ok",
@@ -658,7 +845,6 @@ const TRANSLATIONS = {
       addUpcomingBtn: "Aikatauluta koe",
       addedUpcomingToast: "Aikataulutettu {label} aineelle {subject}",
       convertUpcoming: "Kirjaa tulos",
-      upcomingPlaceholder: "esim. kappalekoe 5",
     },
     scaleHint: {
       finnish: "Suomalainen asteikko 4–10. Esim: 8, 8.5, 8½, 9+, 9-, 10+",
@@ -670,13 +856,13 @@ const TRANSLATIONS = {
     toast: { exported: "Viety", imported: "Tuotu" },
     descriptors: {
       finnish: {
-        10: "Erinomainen",
-        9: "Kiitettävä",
-        8: "Hyvä",
-        7: "Tyydyttävä",
-        6: "Kohtalainen",
-        5: "Välttävä",
-        4: "Hylätty",
+        10: "erinomainen",
+        9: "kiitettävä",
+        8: "hyvä",
+        7: "tyydyttävä",
+        6: "kohtalainen",
+        5: "välttävä",
+        4: "hylätty",
       },
   },
 }
@@ -717,6 +903,113 @@ const fmtDate = (iso) => {
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 };
 const escapeHtml = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+
+// tags are entered as a comma-separated string and stored as a normalized lowercase array
+function parseTags(raw) {
+  if (!raw) return [];
+  return Array.from(new Set(
+    raw.split(",")
+      .map((t) => t.trim().toLowerCase())
+      .filter(Boolean)
+  )).slice(0, 8); // cap to keep chips manageable
+}
+
+function allTagsInUse() {
+  const set = new Set();
+  state.subjects.forEach((s) => s.entries.forEach((e) => (e.tags || []).forEach((tg) => set.add(tg))));
+  return Array.from(set).sort();
+}
+
+function groupById(id) {
+  return state.groups.find((g) => g.id === id) || null;
+}
+
+function groupNameFor(subject) {
+  const g = subject.groupId ? groupById(subject.groupId) : null;
+  return g ? g.name : "";
+}
+
+function nextGroupColor() {
+  const used = state.groups.map((g) => g.color);
+  return COLOR_SWATCHES.find((c) => !used.includes(c)) || COLOR_SWATCHES[used.length % COLOR_SWATCHES.length];
+}
+
+// direct child groups of a given group (or root-level groups if groupId is null)
+function childGroups(parentId) {
+  return state.groups.filter((g) => (g.parentId || null) === (parentId || null));
+}
+
+// subjects directly assigned to a group (not including subjects in child groups)
+function directSubjectsOf(groupId) {
+  return state.subjects.filter((s) => (s.groupId || null) === (groupId || null));
+}
+
+// true if `candidateAncestorId` appears anywhere up the parent chain of `groupId` —
+// used to prevent creating a cycle when a group is moved under another group
+function isDescendantOf(groupId, candidateAncestorId) {
+  let current = groupById(groupId);
+  const seen = new Set();
+  while (current && current.parentId) {
+    if (seen.has(current.id)) return false; // already-corrupt cycle guard
+    seen.add(current.id);
+    if (current.parentId === candidateAncestorId) return true;
+    current = groupById(current.parentId);
+  }
+  return false;
+}
+
+// every subject under a group, including subjects nested inside descendant subgroups
+function allSubjectsUnder(groupId) {
+  const direct = directSubjectsOf(groupId);
+  const subGroups = childGroups(groupId);
+  return subGroups.reduce((acc, sg) => acc.concat(allSubjectsUnder(sg.id)), direct);
+}
+
+// average of all subject-averages under a group (recursively), mirroring overallAverage()
+function groupAverage(groupId) {
+  const subjects = allSubjectsUnder(groupId);
+  const avgs = subjects.map((s) => average(graded(s.entries))).filter((v) => v !== null);
+  if (!avgs.length) return null;
+  return avgs.reduce((sum, v) => sum + v, 0) / avgs.length;
+}
+
+function groupGoalAverage(groupId) {
+  const subjects = allSubjectsUnder(groupId);
+  const goals = subjects.map((s) => s.goal).filter((v) => v !== null && v !== undefined);
+  if (!goals.length) return null;
+  return goals.reduce((sum, v) => sum + v, 0) / goals.length;
+}
+
+// flattens every TEST-type entry (graded or upcoming) across all subjects, for the dashboard test list
+function allTestEntries() {
+  const list = [];
+  state.subjects.forEach((s) => {
+    s.entries.filter((e) => e.type === TYPES.TEST).forEach((e) => {
+      list.push({ ...e, subjectId: s.id, subjectName: s.name, subjectColor: s.color, groupId: s.groupId });
+    });
+  });
+  return list;
+}
+
+function applyHomeFilters(entries) {
+  const f = state.testFilters;
+  return entries.filter((e) => {
+    if (f.search) {
+      const q = f.search.toLowerCase();
+      const haystack = `${e.subjectName} ${e.label || ""}`.toLowerCase();
+      if (!haystack.includes(q)) return false;
+    }
+    if (f.subjectId && e.subjectId !== f.subjectId) return false;
+    if (f.tag && !(e.tags || []).includes(f.tag)) return false;
+    if (f.smiley !== null && f.smiley !== undefined) {
+      if (e.upcoming) return false;
+      if (e.smiley !== f.smiley) return false;
+    }
+    if (f.dateFrom && e.date < f.dateFrom) return false;
+    if (f.dateTo && e.date > f.dateTo) return false;
+    return true;
+  });
+}
 
 /* ======================================================================
    FINNISH GRADE PARSING
@@ -777,6 +1070,7 @@ function finnishDescriptor(value) {
 ====================================================================== */
 const state = {
   subjects: [],
+  groups: [],
   visibleIds: new Set(),
   showAverages: true,
   showGoals: true,
@@ -787,6 +1081,16 @@ const state = {
   loaded: false,
   subjectSort: "manual",
   subjectSortDir: "asc",
+  testFilters: {
+    search: "",
+    tag: null,
+    subjectId: null,
+    smiley: null,
+    dateFrom: "",
+    dateTo: "",
+  },
+  collapsedGroupIds: new Set(),
+  testSearchCollapsed: true,
   hasStorage: (typeof window !== "undefined") && (!!window.storage || (function(){ try { localStorage.setItem("__gt_test","1"); localStorage.removeItem("__gt_test"); return true;} catch(e){return false;} })()),
   lang: (function(){ try { const v = (window.localStorage && localStorage.getItem(STORAGE_KEY + ':lang')) || null; return v || 'en'; } catch(e){ return 'en'; } })(),
 };
@@ -796,6 +1100,14 @@ const charts = {}; // canvas chart instances by panel id
 /* ======================================================================
    DEFAULT DATA
 ====================================================================== */
+const DEFAULT_GROUP_ID = "grp-stem-default";
+
+function makeDefaultGroups() {
+  return [
+    { id: DEFAULT_GROUP_ID, name: "STEM", color: "#3D5A80", parentId: null },
+  ];
+}
+
 function makeDefaultSubjects(scale) {
   const inDays = (n) => {
     const d = new Date();
@@ -804,40 +1116,40 @@ function makeDefaultSubjects(scale) {
   };
   if (scale === "finnish") {
     return [
-      { id: uid(), name: "Mathematics", color: "#3D5A80", goal: 9, entries: [
-        { id: uid(), date: "2026-01-15", value: 7, type: TYPES.TEST, label: "Quiz 1", note: "", smiley: 2, upcoming: false },
-        { id: uid(), date: "2026-02-02", value: 8, type: TYPES.TEST, label: "Quiz 2", note: "", smiley: 3, upcoming: false },
-        { id: uid(), date: "2026-02-20", value: 7.5, type: TYPES.TEST, label: "Midterm", note: "Careful with derivatives", smiley: 1, upcoming: false },
-        { id: uid(), date: "2026-03-10", value: 8.5, type: TYPES.TEST, label: "Quiz 3", note: "", smiley: 4, upcoming: false },
-        { id: uid(), date: "2026-01-31", value: 7, type: TYPES.REPORT, label: "Term 1", note: "", smiley: null, upcoming: false },
-        { id: uid(), date: "2026-03-31", value: 8, type: TYPES.REPORT, label: "Term 2", note: "", smiley: null, upcoming: false },
-        { id: uid(), date: inDays(6), value: null, type: TYPES.TEST, label: "Chapter 6 test", note: "", smiley: null, upcoming: true },
+      { id: uid(), name: "Mathematics", color: "#3D5A80", goal: 9, groupId: DEFAULT_GROUP_ID, entries: [
+        { id: uid(), date: "2026-01-15", value: 7, type: TYPES.TEST, label: "Quiz 1", note: "", smiley: 2, upcoming: false, tags: ["algebra"] },
+        { id: uid(), date: "2026-02-02", value: 8, type: TYPES.TEST, label: "Quiz 2", note: "", smiley: 3, upcoming: false, tags: ["algebra"] },
+        { id: uid(), date: "2026-02-20", value: 7.5, type: TYPES.TEST, label: "Midterm", note: "Careful with derivatives", smiley: 1, upcoming: false, tags: ["calculus", "midterm"] },
+        { id: uid(), date: "2026-03-10", value: 8.5, type: TYPES.TEST, label: "Quiz 3", note: "", smiley: 4, upcoming: false, tags: ["calculus"] },
+        { id: uid(), date: "2026-01-31", value: 7, type: TYPES.REPORT, label: "Term 1", note: "", smiley: null, upcoming: false, tags: [] },
+        { id: uid(), date: "2026-03-31", value: 8, type: TYPES.REPORT, label: "Term 2", note: "", smiley: null, upcoming: false, tags: [] },
+        { id: uid(), date: inDays(6), value: null, type: TYPES.TEST, label: "Chapter 6 test", note: "", smiley: null, upcoming: true, tags: ["calculus"] },
       ]},
-      { id: uid(), name: "Biology", color: "#5C7A5C", goal: 9, entries: [
-        { id: uid(), date: "2026-01-20", value: 9, type: TYPES.TEST, label: "Lab report", note: "", smiley: 4, upcoming: false },
-        { id: uid(), date: "2026-02-12", value: 8, type: TYPES.TEST, label: "Unit test", note: "", smiley: 3, upcoming: false },
-        { id: uid(), date: "2026-03-05", value: 9.5, type: TYPES.TEST, label: "Quiz", note: "", smiley: 4, upcoming: false },
-        { id: uid(), date: "2026-01-31", value: 8, type: TYPES.REPORT, label: "Term 1", note: "", smiley: null, upcoming: false },
-        { id: uid(), date: "2026-03-31", value: 9, type: TYPES.REPORT, label: "Term 2", note: "", smiley: null, upcoming: false },
+      { id: uid(), name: "Biology", color: "#5C7A5C", goal: 9, groupId: DEFAULT_GROUP_ID, entries: [
+        { id: uid(), date: "2026-01-20", value: 9, type: TYPES.TEST, label: "Lab report", note: "", smiley: 4, upcoming: false, tags: ["lab"] },
+        { id: uid(), date: "2026-02-12", value: 8, type: TYPES.TEST, label: "Unit test", note: "", smiley: 3, upcoming: false, tags: ["genetics"] },
+        { id: uid(), date: "2026-03-05", value: 9.5, type: TYPES.TEST, label: "Quiz", note: "", smiley: 4, upcoming: false, tags: ["genetics"] },
+        { id: uid(), date: "2026-01-31", value: 8, type: TYPES.REPORT, label: "Term 1", note: "", smiley: null, upcoming: false, tags: [] },
+        { id: uid(), date: "2026-03-31", value: 9, type: TYPES.REPORT, label: "Term 2", note: "", smiley: null, upcoming: false, tags: [] },
       ]},
     ];
   }
   return [
-    { id: uid(), name: "Mathematics", color: "#3D5A80", goal: 90, entries: [
-      { id: uid(), date: "2026-01-15", value: 78, type: TYPES.TEST, label: "Quiz 1", note: "", smiley: 2, upcoming: false },
-      { id: uid(), date: "2026-02-02", value: 82, type: TYPES.TEST, label: "Quiz 2", note: "", smiley: 3, upcoming: false },
-      { id: uid(), date: "2026-02-20", value: 75, type: TYPES.TEST, label: "Midterm", note: "Need to review chapter 4", smiley: 1, upcoming: false },
-      { id: uid(), date: "2026-03-10", value: 88, type: TYPES.TEST, label: "Quiz 3", note: "", smiley: 4, upcoming: false },
-      { id: uid(), date: "2026-01-31", value: 79, type: TYPES.REPORT, label: "Term 1", note: "", smiley: null, upcoming: false },
-      { id: uid(), date: "2026-03-31", value: 84, type: TYPES.REPORT, label: "Term 2", note: "", smiley: null, upcoming: false },
-      { id: uid(), date: inDays(6), value: null, type: TYPES.TEST, label: "Chapter 6 test", note: "", smiley: null, upcoming: true },
+    { id: uid(), name: "Mathematics", color: "#3D5A80", goal: 90, groupId: DEFAULT_GROUP_ID, entries: [
+      { id: uid(), date: "2026-01-15", value: 78, type: TYPES.TEST, label: "Quiz 1", note: "", smiley: 2, upcoming: false, tags: ["algebra"] },
+      { id: uid(), date: "2026-02-02", value: 82, type: TYPES.TEST, label: "Quiz 2", note: "", smiley: 3, upcoming: false, tags: ["algebra"] },
+      { id: uid(), date: "2026-02-20", value: 75, type: TYPES.TEST, label: "Midterm", note: "Need to review chapter 4", smiley: 1, upcoming: false, tags: ["calculus", "midterm"] },
+      { id: uid(), date: "2026-03-10", value: 88, type: TYPES.TEST, label: "Quiz 3", note: "", smiley: 4, upcoming: false, tags: ["calculus"] },
+      { id: uid(), date: "2026-01-31", value: 79, type: TYPES.REPORT, label: "Term 1", note: "", smiley: null, upcoming: false, tags: [] },
+      { id: uid(), date: "2026-03-31", value: 84, type: TYPES.REPORT, label: "Term 2", note: "", smiley: null, upcoming: false, tags: [] },
+      { id: uid(), date: inDays(6), value: null, type: TYPES.TEST, label: "Chapter 6 test", note: "", smiley: null, upcoming: true, tags: ["calculus"] },
     ]},
-    { id: uid(), name: "Biology", color: "#5C7A5C", goal: 95, entries: [
-      { id: uid(), date: "2026-01-20", value: 91, type: TYPES.TEST, label: "Lab report", note: "", smiley: 4, upcoming: false },
-      { id: uid(), date: "2026-02-12", value: 86, type: TYPES.TEST, label: "Unit test", note: "", smiley: 3, upcoming: false },
-      { id: uid(), date: "2026-03-05", value: 93, type: TYPES.TEST, label: "Quiz", note: "", smiley: 4, upcoming: false },
-      { id: uid(), date: "2026-01-31", value: 89, type: TYPES.REPORT, label: "Term 1", note: "", smiley: null, upcoming: false },
-      { id: uid(), date: "2026-03-31", value: 90, type: TYPES.REPORT, label: "Term 2", note: "", smiley: null, upcoming: false },
+    { id: uid(), name: "Biology", color: "#5C7A5C", goal: 95, groupId: DEFAULT_GROUP_ID, entries: [
+      { id: uid(), date: "2026-01-20", value: 91, type: TYPES.TEST, label: "Lab report", note: "", smiley: 4, upcoming: false, tags: ["lab"] },
+      { id: uid(), date: "2026-02-12", value: 86, type: TYPES.TEST, label: "Unit test", note: "", smiley: 3, upcoming: false, tags: ["genetics"] },
+      { id: uid(), date: "2026-03-05", value: 93, type: TYPES.TEST, label: "Quiz", note: "", smiley: 4, upcoming: false, tags: ["genetics"] },
+      { id: uid(), date: "2026-01-31", value: 89, type: TYPES.REPORT, label: "Term 1", note: "", smiley: null, upcoming: false, tags: [] },
+      { id: uid(), date: "2026-03-31", value: 90, type: TYPES.REPORT, label: "Term 2", note: "", smiley: null, upcoming: false, tags: [] },
     ]},
   ];
 }
@@ -865,6 +1177,7 @@ function persist() {
   saveTimer = setTimeout(async () => {
     const payload = JSON.stringify({
       subjects: state.subjects,
+      groups: state.groups,
       showAverages: state.showAverages,
       showGoals: state.showGoals,
       showTrend: state.showTrend,
@@ -873,6 +1186,7 @@ function persist() {
       visibleIds: Array.from(state.visibleIds),
       subjectSort: state.subjectSort,
       subjectSortDir: state.subjectSortDir,
+      collapsedGroupIds: Array.from(state.collapsedGroupIds),
     });
     try {
       if (window.storage) {
@@ -1099,13 +1413,95 @@ function render() {
 /* ======================================================================
    RENDER: CHARTS TAB
 ====================================================================== */
+function renderTestSearchPanel() {
+  const f = state.testFilters;
+  const all = allTestEntries();
+  const filtered = applyHomeFilters(all).sort((a, b) => b.date.localeCompare(a.date));
+  const tags = allTagsInUse();
+  const anyFilterActive = !!(f.search || f.subjectId || f.tag || f.smiley !== null || f.dateFrom || f.dateTo);
+  const isCollapsed = state.testSearchCollapsed && !anyFilterActive;
+
+  return `
+    <div class="panel test-search-panel">
+      <button type="button" class="panel-title test-search-toggle" data-action="toggle-test-search">
+        <span>${icon("search", 16)} ${escapeHtml(t('ui.searchTests'))}</span>
+        <span class="group-collapse-chevron">${icon(isCollapsed ? "chevronRight" : "chevronDownSm", 16)}</span>
+      </button>
+      ${!isCollapsed ? `
+        <div class="test-search-bar">
+          ${icon("search", 16)}
+          <input type="text" id="homeSearchInput" placeholder="${escapeHtml(t('ui.searchPlaceholder'))}" value="${escapeHtml(f.search)}" />
+          ${f.search ? `<button type="button" class="test-search-clear" id="homeSearchClear">${icon("x", 14)}</button>` : ""}
+        </div>
+
+        <div class="test-filter-bar">
+          <select class="test-filter-select ${f.subjectId ? 'active-filter' : ''}" id="homeFilterSubject">
+            <option value="">${escapeHtml(t('ui.allSubjectsFilter'))}</option>
+            ${state.subjects.map((s) => `<option value="${s.id}" ${f.subjectId === s.id ? 'selected' : ''}>${escapeHtml(s.name)}</option>`).join("")}
+          </select>
+
+          <select class="test-filter-select ${f.tag ? 'active-filter' : ''}" id="homeFilterTag">
+            <option value="">${escapeHtml(t('ui.allTags'))}</option>
+            ${tags.map((tg) => `<option value="${escapeHtml(tg)}" ${f.tag === tg ? 'selected' : ''}>${escapeHtml(tg)}</option>`).join("")}
+          </select>
+
+          <select class="test-filter-select ${(f.smiley !== null && f.smiley !== undefined) ? 'active-filter' : ''}" id="homeFilterSmiley">
+            <option value="">${escapeHtml(t('ui.allFeelings'))}</option>
+            ${SMILEY_EMOJI.map((emoji, i) => `<option value="${i}" ${f.smiley === i ? 'selected' : ''}>${emoji} ${escapeHtml(SMILEY_TITLES[i]())}</option>`).join("")}
+          </select>
+
+          <label class="test-filter-date-field">
+            <span>${escapeHtml(t('ui.dateFrom'))}</span>
+            <input type="date" class="test-filter-date ${f.dateFrom ? 'active-filter' : ''}" id="homeFilterDateFrom" value="${f.dateFrom}" />
+          </label>
+          <label class="test-filter-date-field">
+            <span>${escapeHtml(t('ui.dateTo'))}</span>
+            <input type="date" class="test-filter-date ${f.dateTo ? 'active-filter' : ''}" id="homeFilterDateTo" value="${f.dateTo}" />
+          </label>
+
+          ${anyFilterActive ? `<button type="button" class="home-filter-clear-btn" id="homeFilterClearAll">${icon("x", 13)} ${escapeHtml(t('ui.clearFilters'))}</button>` : ""}
+        </div>
+
+        <div class="home-results-count">${escapeHtml(t('ui.testsFound', { count: filtered.length }))}</div>
+
+        ${!filtered.length ? `<div class="home-empty">${escapeHtml(all.length ? t('ui.noMatchingTests') : t('ui.noTestsYet'))}</div>` : `
+          <div class="home-test-list">
+            ${filtered.map((e) => {
+              const days = e.upcoming ? daysUntil(e.date) : null;
+              let countdown = "";
+              if (e.upcoming) {
+                if (days < 0) countdown = t('ui.overdue');
+                else if (days === 0) countdown = t('ui.today');
+                else if (days === 1) countdown = t('ui.dayAway');
+                else countdown = t('ui.daysAway', { days });
+              }
+              return `
+              <div class="home-test-row ${e.upcoming ? 'is-upcoming' : ''}">
+                <span class="home-test-row-date">${fmtDate(e.date)}</span>
+                <span class="home-test-row-subject"><span class="subject-dot-sm" style="background:${e.subjectColor}"></span>${escapeHtml(e.subjectName)}</span>
+                <span class="home-test-row-label">${escapeHtml(e.label || "—")}</span>
+                <span class="home-test-row-value">${e.upcoming
+                  ? `<span class="upcoming-badge">${icon("calendar", 10)} ${escapeHtml(countdown)}</span>`
+                  : `${formatGrade(e.value)}${(e.smiley !== null && e.smiley !== undefined) ? `<span class="entry-smiley">${SMILEY_EMOJI[e.smiley]}</span>` : ""}`}</span>
+                ${(e.tags && e.tags.length) ? `<div class="home-test-row-meta">${renderTagChips(e.tags, { clickable: true })}</div>` : ""}
+              </div>`;
+            }).join("")}
+          </div>
+        `}
+      ` : ""}
+    </div>
+  `;
+}
+
 function renderChartsTab() {
   const sc = scaleDef();
   return `
+    ${renderTestSearchPanel()}
+
     <div class="summary-strip">
       ${renderAggregateCard()}
-      ${state.subjects.map(renderSummaryCard).join("") || `<p class="empty-state-mini">${escapeHtml(t('ui.noSubjects'))}</p>`}
     </div>
+    ${renderDashboardSubjects()}
 
     <div class="chart-controls">
       <div class="visibility-chips">
@@ -1156,6 +1552,53 @@ function renderSummaryCard(s) {
       ${growthBadgeHtml(graded(s.entries))}
       ${goalLine}
     </div>`;
+}
+
+// recursively renders a group as a collapsible container: header (name, average, goal, chevron),
+// then its child groups (same treatment, indented), then its direct subjects' summary cards.
+function renderGroupSection(group, depth) {
+  depth = depth || 0;
+  const isCollapsed = state.collapsedGroupIds.has(group.id);
+  const avg = groupAverage(group.id);
+  const goal = groupGoalAverage(group.id);
+  const subGroups = childGroups(group.id);
+  const directSubjects = directSubjectsOf(group.id);
+  const totalCount = allSubjectsUnder(group.id).length;
+
+  return `
+    <div class="group-section" data-group-section="${group.id}" style="--depth:${depth}">
+      <button type="button" class="group-section-header" data-action="toggle-group-collapse" data-id="${group.id}">
+        <span class="group-collapse-chevron">${icon(isCollapsed ? "chevronRight" : "chevronDownSm", 16)}</span>
+        ${icon("folder", 14)}
+        <span class="group-section-title" style="color:${group.color}">${escapeHtml(group.name)}</span>
+        <span class="group-section-count">${totalCount}</span>
+        <span class="group-section-stats">
+          <span class="summary-card-avg" style="font-size:16px;">${formatGrade(avg)}</span>
+          <span class="letter-grade">${escapeHtml(letterOrDescriptor(avg))}</span>
+          ${goal !== null ? `<span class="summary-card-goal">${icon("target", 10)} ${formatGrade(goal)}</span>` : ""}
+        </span>
+      </button>
+      ${!isCollapsed ? `
+        <div class="group-section-body">
+          ${subGroups.map((sg) => renderGroupSection(sg, depth + 1)).join("")}
+          ${directSubjects.length ? `<div class="summary-strip summary-strip-nested">${directSubjects.map(renderSummaryCard).join("")}</div>` : ""}
+          ${(!subGroups.length && !directSubjects.length) ? `<p class="empty-state-mini">${escapeHtml(t('ui.groupEmpty'))}</p>` : ""}
+        </div>
+      ` : ""}
+    </div>
+  `;
+}
+
+function renderDashboardSubjects() {
+  const rootGroups = childGroups(null);
+  const ungrouped = directSubjectsOf(null);
+  if (!state.subjects.length) {
+    return `<p class="empty-state-mini">${escapeHtml(t('ui.noSubjects'))}</p>`;
+  }
+  return `
+    ${rootGroups.length ? `<div class="group-sections">${rootGroups.map((g) => renderGroupSection(g, 0)).join("")}</div>` : ""}
+    ${ungrouped.length ? `<div class="summary-strip">${ungrouped.map(renderSummaryCard).join("")}</div>` : ""}
+  `;
 }
 
 function renderChartPanel(type, title, iconName) {
@@ -1449,6 +1892,28 @@ function renderOneChart(type) {
 /* ======================================================================
    RENDER: MANAGE TAB
 ====================================================================== */
+function renderQuickLogForm(subject, entry) {
+  const hint = state.scale === "finnish" ? t('scaleHint.finnish') : t('scaleHint.hundred');
+  return `
+    <form class="quick-log-form" data-action="quick-log-form" data-subject="${subject.id}" data-entry="${entry.id}">
+      <label class="field">
+        <span>${escapeHtml(t('ui.grade'))}</span>
+        <input type="text" class="quick-log-value" placeholder="${escapeHtml(state.scale === 'finnish' ? t('ui.gradePlaceholderFinnish') : t('ui.gradePlaceholderHundred'))}" autofocus />
+      </label>
+      <div class="field">
+        <span>${escapeHtml(t('ui.selfAssessmentOptional'))}</span>
+        <div class="smiley-picker quick-log-smileys">
+          ${SMILEY_EMOJI.map((emoji, i) => `<button type="button" class="smiley-btn" data-smiley="${i}" title="${escapeHtml(SMILEY_TITLES[i]())}">${emoji}</button>`).join("")}
+        </div>
+      </div>
+      <button type="submit" class="btn-secondary">${icon("check", 14)} ${escapeHtml(t('ui.addGradeBtn'))}</button>
+      <button type="button" class="quick-log-cancel" data-action="cancel-quick-log">${escapeHtml(t('confirm.cancel'))}</button>
+      <div class="quick-log-msg field-wide" style="flex-basis:100%;"></div>
+      <div class="field-hint" style="flex-basis:100%;">${escapeHtml(hint)}</div>
+    </form>
+  `;
+}
+
 function renderUpcomingPanel() {
   if (!state.subjects.length) {
     return `<div class="empty-state-mini"><p>${escapeHtml(t('ui.noSubjects'))}</p></div>`;
@@ -1469,7 +1934,11 @@ function renderUpcomingPanel() {
         </label>
         <label class="field field-wide">
           <span>${escapeHtml(t('ui.labelOptional'))}</span>
-          <input type="text" id="upcomingLabel" placeholder="${escapeHtml(t('ui.upcomingPlaceholder'))}" />
+          <input type="text" id="upcomingLabel" placeholder="e.g. Chapter 5 test" />
+        </label>
+        <label class="field field-wide">
+          <span>${escapeHtml(t('ui.tagsOptional'))}</span>
+          <input type="text" id="upcomingTags" placeholder="${escapeHtml(t('ui.tagsPlaceholder'))}" autocomplete="off" />
         </label>
       </div>
       <button type="submit" class="btn-secondary" style="align-self:flex-start;">${icon("calendar", 14)} ${escapeHtml(t('ui.addUpcomingBtn'))}</button>
@@ -1484,17 +1953,65 @@ function renderUpcomingPanel() {
           else if (days === 1) chip = t('ui.dayAway');
           else chip = t('ui.daysAway', { days });
           return `
-          <div class="upcoming-row">
+          <div class="upcoming-row" data-upcoming-row="${e.id}">
             <span class="upcoming-row-date">${fmtDate(e.date)}</span>
             <span class="upcoming-row-subject"><span class="subject-dot-sm" style="background:${e.subjectColor}"></span>${escapeHtml(e.subjectName)}</span>
             <span class="upcoming-row-label">${escapeHtml(e.label || "—")}</span>
+            ${renderTagChips(e.tags)}
             <span class="countdown-chip">${escapeHtml(chip)}</span>
-            <button type="button" class="icon-btn icon-btn-danger" data-action="delete-entry" data-subject="${e.subjectId}" data-entry="${e.id}" title="${escapeHtml(t('ui.deleteConfirm'))}">${icon("x", 13)}</button>
+            <span class="upcoming-row-actions">
+              <button type="button" class="log-result-btn" data-action="open-quick-log" data-subject="${e.subjectId}" data-entry="${e.id}">${icon("check", 12)} ${escapeHtml(t('ui.convertUpcoming'))}</button>
+              <button type="button" class="icon-btn icon-btn-danger" data-action="delete-entry" data-subject="${e.subjectId}" data-entry="${e.id}" title="${escapeHtml(t('ui.deleteConfirm'))}">${icon("x", 13)}</button>
+            </span>
           </div>`;
         }).join("")}
       </div>
     `}
   `;
+}
+
+function renderGroupManageRow(group, depth) {
+  depth = depth || 0;
+  const count = directSubjectsOf(group.id).length;
+  const totalCount = allSubjectsUnder(group.id).length;
+  // valid parent options: any group that isn't itself and isn't one of its own descendants
+  const parentOptions = state.groups.filter((g) => g.id !== group.id && !isDescendantOf(g.id, group.id));
+  return `
+    <div class="group-manage-row" data-group-row="${group.id}" style="margin-left:${depth * 22}px;">
+      ${depth > 0 ? `<span class="group-nest-indicator">${icon("chevronRight", 13)}</span>` : ""}
+      <span class="subject-dot-sm" style="background:${group.color}"></span>
+      <input type="text" value="${escapeHtml(group.name)}" data-action="rename-group" data-id="${group.id}" />
+      <select class="group-parent-select" data-action="set-group-parent" data-id="${group.id}" title="${escapeHtml(t('ui.parentGroup'))}">
+        <option value="">${escapeHtml(t('ui.noParentGroup'))}</option>
+        ${parentOptions.map((g) => `<option value="${g.id}" ${group.parentId === g.id ? 'selected' : ''}>${escapeHtml(g.name)}</option>`).join("")}
+      </select>
+      <span class="group-manage-count" title="${escapeHtml(t('ui.directVsTotal'))}">${count}/${totalCount}</span>
+      <div class="color-picker-anchor">
+        <button class="icon-btn" data-action="open-group-color" data-id="${group.id}" title="${escapeHtml(t('ui.chooseColor'))}">
+          <span style="color:${group.color}">${icon("palette", 14)}</span>
+        </button>
+      </div>
+      <button class="icon-btn icon-btn-danger" data-action="delete-group" data-id="${group.id}" title="${escapeHtml(t('ui.deleteConfirm'))}">${icon("trash", 14)}</button>
+    </div>
+  `;
+}
+
+function renderGroupTreeForManage(parentId, depth) {
+  return childGroups(parentId).map((g) => renderGroupManageRow(g, depth) + renderGroupTreeForManage(g.id, depth + 1)).join("");
+}
+
+function renderGroupsManagePanel() {
+  const addForm = `
+    <form id="addGroupForm" class="add-subject-form">
+      <span class="subject-dot-sm" style="background:${nextGroupColor()}"></span>
+      <input type="text" id="newGroupName" autocomplete="off" placeholder="${escapeHtml(t('ui.newGroupPlaceholder'))}" />
+      <button type="submit" class="btn-secondary">${icon("plus", 14)} ${escapeHtml(t('ui.add'))}</button>
+    </form>
+  `;
+  if (!state.groups.length) {
+    return `<p class="empty-state-mini">${escapeHtml(t('ui.noGroups'))}</p>${addForm}`;
+  }
+  return `${renderGroupTreeForManage(null, 0)}${addForm}`;
 }
 
 function renderManageTab() {
@@ -1534,6 +2051,11 @@ function renderManageTab() {
         <input type="text" id="newSubjectName" autocomplete="off" placeholder="${escapeHtml(t('ui.newSubjectPlaceholder'))}" />
         <button type="submit" class="btn-secondary">${icon("plus", 14)} ${escapeHtml(t('ui.add'))}</button>
       </form>
+    </section>
+
+    <section class="panel">
+      <h2 class="panel-title">${escapeHtml(t('ui.manageGroups'))}</h2>
+      ${renderGroupsManagePanel()}
     </section>
 
     <section class="panel">
@@ -1585,6 +2107,10 @@ function renderAddEntryForm() {
           <span>${escapeHtml(t('ui.labelOptional'))}</span>
           <input type="text" id="entryLabel" placeholder="${escapeHtml(t('ui.labelOptional'))}" />
         </label>
+        <label class="field field-wide" id="entryTagsField">
+          <span>${escapeHtml(t('ui.tagsOptional'))}</span>
+          <input type="text" id="entryTags" placeholder="${escapeHtml(t('ui.tagsPlaceholder'))}" autocomplete="off" />
+        </label>
         <div class="field field-wide">
           <span>${escapeHtml(t('ui.selfAssessmentOptional'))}</span>
           <div class="smiley-picker" id="smileyPicker">
@@ -1607,12 +2133,18 @@ function renderSubjectRow(s) {
   const visible = state.visibleIds.has(s.id);
   const hasGoal = s.goal !== null && s.goal !== undefined;
   return `
-    <div class="subject-row" data-subject-id="${s.id}" draggable="${state.subjectSort === 'manual' ? 'true' : 'false'}">
-      ${state.subjectSort === 'manual' ? `<span class="drag-handle" title="${escapeHtml(t('ui.dragToReorder'))}">${icon("dragHandle", 16)}</span>` : ""}
+    <div class="subject-row" data-subject-id="${s.id}">
+      ${state.subjectSort === 'manual' ? `<span class="drag-handle" data-action="drag-handle" data-id="${s.id}" title="${escapeHtml(t('ui.dragToReorder'))}">${icon("dragHandle", 16)}</span>` : ""}
       <button class="subject-visibility ${visible ? '' : 'subject-visibility-off'}" data-action="toggle-visible" data-id="${s.id}" title="${escapeHtml(t('ui.toggleVisibility'))}">
         <span class="subject-dot" style="background:${visible ? s.color : 'var(--ink-faint)'}"></span>
       </button>
       <button class="subject-name-dashed" data-action="rename" data-id="${s.id}" title="${escapeHtml(t('ui.renameHint'))}">${escapeHtml(s.name)}</button>
+      <div class="group-select-anchor">
+        <button type="button" class="group-select-btn" data-action="open-group-menu" data-id="${s.id}" title="${escapeHtml(t('ui.assignGroup'))}">
+          ${icon("folder", 12)}
+          <span class="group-select-label">${escapeHtml(groupNameFor(s) || t('ui.noGroup'))}</span>
+        </button>
+      </div>
       <div class="subject-goal-input ${hasGoal ? 'has-goal' : ''}">
         ${icon("target", 12)}
         <span class="goal-label">${escapeHtml(t('ui.goalLabel'))}</span>
@@ -1671,6 +2203,12 @@ const SMILEY_TITLES = [
   () => t('ui.smileyGreat'),
 ];
 
+function renderTagChips(tags, opts) {
+  opts = opts || {};
+  if (!tags || !tags.length) return "";
+  return `<span class="tag-chip-row">${tags.map((tg) => `<span class="tag-chip" ${opts.clickable ? `data-action="filter-tag-chip" data-tag="${escapeHtml(tg)}"` : ""}>${icon("tag", 9)}${escapeHtml(tg)}</span>`).join("")}</span>`;
+}
+
 function renderEntryList(s, filter) {
   const sorted = [...s.entries].sort((a, b) => b.date.localeCompare(a.date));
   const filtered = filter === "all" ? sorted : sorted.filter((e) => e.type === filter);
@@ -1687,6 +2225,7 @@ function renderEntryList(s, filter) {
             : `${formatGrade(e.value)}${(e.smiley !== null && e.smiley !== undefined) ? `<span class="entry-smiley">${SMILEY_EMOJI[e.smiley]}</span>` : ""}`}</span>
           <button class="icon-btn icon-btn-danger" data-action="delete-entry" data-subject="${s.id}" data-entry="${e.id}" title="${escapeHtml(t('ui.deleteConfirm'))}">${icon("x", 13)}</button>
         </li>
+        ${(e.tags && e.tags.length) ? `<li class="entry-row-note">${renderTagChips(e.tags)}</li>` : ""}
         ${e.upcoming ? `<li class="entry-row-note"><button type="button" class="btn-ghost" data-action="convert-upcoming" data-subject="${s.id}" data-entry="${e.id}" style="padding:2px 8px; font-size:11px;">${icon("check", 11)} ${escapeHtml(t('ui.convertUpcoming'))}</button></li>` : ""}
         ${e.note ? `<li class="entry-row-note">${icon("note", 11)} ${escapeHtml(e.note)}</li>` : ""}
       `).join("")}
@@ -1762,21 +2301,24 @@ function renderSettingsTab() {
 ====================================================================== */
 function exportJson() {
   const payload = {
-    version: 2,
+    version: 3,
     exportedAt: new Date().toISOString(),
     scale: state.scale,
     subjects: state.subjects,
+    groups: state.groups,
   };
   downloadFile(`gradebook-export-${todayISO()}.json`, JSON.stringify(payload, null, 2), "application/json");
   showToast(`${icon("check", 14)} ${escapeHtml(t('ui.exportSuccessJson'))}`);
 }
 
 function exportCsv() {
-  const rows = [["subject", "type", "date", "value", "label", "note", "smiley", "upcoming"]];
+  const rows = [["subject", "group", "type", "date", "value", "label", "note", "smiley", "upcoming", "tags"]];
   state.subjects.forEach((s) => {
+    const g = s.groupId ? groupById(s.groupId) : null;
     s.entries.forEach((e) => {
       rows.push([
         s.name,
+        g ? g.name : "",
         e.type,
         e.date,
         e.upcoming ? "" : formatGrade(e.value),
@@ -1784,6 +2326,7 @@ function exportCsv() {
         e.note || "",
         (e.smiley !== null && e.smiley !== undefined) ? e.smiley : "",
         e.upcoming ? "yes" : "no",
+        (e.tags && e.tags.length) ? e.tags.join("|") : "",
       ]);
     });
   });
@@ -1827,6 +2370,7 @@ function importJsonFile(file) {
             name: s.name || "Untitled",
             color: s.color || nextColor(),
             goal: s.goal ?? null,
+            groupId: s.groupId ?? null,
             entries: (s.entries || []).map((e) => ({
               id: e.id || uid(),
               date: e.date,
@@ -1836,8 +2380,19 @@ function importJsonFile(file) {
               note: e.note || "",
               smiley: (e.smiley !== undefined && e.smiley !== null) ? e.smiley : null,
               upcoming: !!e.upcoming,
+              tags: Array.isArray(e.tags) ? e.tags : [],
             })),
           }));
+          state.groups = Array.isArray(data.groups) ? data.groups.map((g) => ({
+            id: g.id || uid(),
+            name: g.name || "Group",
+            color: g.color || nextGroupColor(),
+            parentId: g.parentId ?? null,
+          })) : [];
+          // drop dangling groupId/parentId references to groups that weren't included in the import
+          const validGroupIds = new Set(state.groups.map((g) => g.id));
+          state.subjects.forEach((s) => { if (s.groupId && !validGroupIds.has(s.groupId)) s.groupId = null; });
+          state.groups.forEach((g) => { if (g.parentId && !validGroupIds.has(g.parentId)) g.parentId = null; });
           if (data.scale && SCALES[data.scale]) state.scale = data.scale;
           state.visibleIds = new Set(state.subjects.map((s) => s.id));
           persist();
@@ -1855,8 +2410,138 @@ function importJsonFile(file) {
 /* ======================================================================
    EVENT HANDLERS (delegated, re-attached on every render)
 ====================================================================== */
+function renderHomeResultsOnly() {
+  const root = document.getElementById("mainRoot");
+  const countEl = root.querySelector(".home-results-count");
+  const listWrap = root.querySelector(".home-test-list, .home-empty");
+  if (!countEl || !listWrap) return;
+
+  const all = allTestEntries();
+  const filtered = applyHomeFilters(all).sort((a, b) => b.date.localeCompare(a.date));
+  countEl.textContent = t('ui.testsFound', { count: filtered.length });
+
+  const newHtml = !filtered.length
+    ? `<div class="home-empty">${escapeHtml(all.length ? t('ui.noMatchingTests') : t('ui.noTestsYet'))}</div>`
+    : `<div class="home-test-list">${filtered.map((e) => {
+        const days = e.upcoming ? daysUntil(e.date) : null;
+        let countdown = "";
+        if (e.upcoming) {
+          if (days < 0) countdown = t('ui.overdue');
+          else if (days === 0) countdown = t('ui.today');
+          else if (days === 1) countdown = t('ui.dayAway');
+          else countdown = t('ui.daysAway', { days });
+        }
+        return `
+        <div class="home-test-row ${e.upcoming ? 'is-upcoming' : ''}">
+          <span class="home-test-row-date">${fmtDate(e.date)}</span>
+          <span class="home-test-row-subject"><span class="subject-dot-sm" style="background:${e.subjectColor}"></span>${escapeHtml(e.subjectName)}</span>
+          <span class="home-test-row-label">${escapeHtml(e.label || "—")}</span>
+          <span class="home-test-row-value">${e.upcoming
+            ? `<span class="upcoming-badge">${icon("calendar", 10)} ${escapeHtml(countdown)}</span>`
+            : `${formatGrade(e.value)}${(e.smiley !== null && e.smiley !== undefined) ? `<span class="entry-smiley">${SMILEY_EMOJI[e.smiley]}</span>` : ""}`}</span>
+          ${(e.tags && e.tags.length) ? `<div class="home-test-row-meta">${renderTagChips(e.tags, { clickable: true })}</div>` : ""}
+        </div>`;
+      }).join("")}</div>`;
+
+  // replace just the list/empty-state node
+  const temp = document.createElement("div");
+  temp.innerHTML = newHtml;
+  listWrap.replaceWith(temp.firstElementChild);
+
+  // also refresh the clear-filters button visibility and search-clear button without a full render
+  const f = state.testFilters;
+  const anyFilterActive = !!(f.search || f.subjectId || f.tag || f.smiley !== null || f.dateFrom || f.dateTo);
+  const filterBar = root.querySelector(".test-filter-bar");
+  let clearBtn = document.getElementById("homeFilterClearAll");
+  if (anyFilterActive && !clearBtn && filterBar) {
+    filterBar.insertAdjacentHTML("beforeend", `<button type="button" class="home-filter-clear-btn" id="homeFilterClearAll">${icon("x", 13)} ${escapeHtml(t('ui.clearFilters'))}</button>`);
+    document.getElementById("homeFilterClearAll").addEventListener("click", () => {
+      state.testFilters = { search: "", tag: null, subjectId: null, smiley: null, dateFrom: "", dateTo: "" };
+      render();
+    });
+  } else if (!anyFilterActive && clearBtn) {
+    clearBtn.remove();
+  }
+  const searchBar = root.querySelector(".test-search-bar");
+  let searchClearBtn = document.getElementById("homeSearchClear");
+  if (f.search && !searchClearBtn && searchBar) {
+    searchBar.insertAdjacentHTML("beforeend", `<button type="button" class="test-search-clear" id="homeSearchClear">${icon("x", 14)}</button>`);
+    document.getElementById("homeSearchClear").addEventListener("click", () => {
+      state.testFilters.search = "";
+      render();
+    });
+  } else if (!f.search && searchClearBtn) {
+    searchClearBtn.remove();
+  }
+
+  root.querySelectorAll('[data-action="filter-tag-chip"]').forEach((chip) => {
+    chip.addEventListener("click", () => {
+      state.testFilters.tag = chip.dataset.tag;
+      render();
+    });
+  });
+}
+
 function attachHandlers() {
   const root = document.getElementById("mainRoot");
+
+  const testSearchToggle = root.querySelector('[data-action="toggle-test-search"]');
+  if (testSearchToggle) {
+    testSearchToggle.addEventListener("click", () => {
+      state.testSearchCollapsed = !state.testSearchCollapsed;
+      render();
+    });
+  }
+
+  root.querySelectorAll('[data-action="toggle-group-collapse"]').forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const id = btn.dataset.id;
+      if (state.collapsedGroupIds.has(id)) state.collapsedGroupIds.delete(id);
+      else state.collapsedGroupIds.add(id);
+      persist();
+      render();
+    });
+  });
+
+  const homeSearchInput = document.getElementById("homeSearchInput");
+  if (homeSearchInput) {
+    homeSearchInput.addEventListener("input", (e) => {
+      state.testFilters.search = e.target.value;
+      renderHomeResultsOnly();
+    });
+  }
+  const homeSearchClear = document.getElementById("homeSearchClear");
+  if (homeSearchClear) {
+    homeSearchClear.addEventListener("click", () => {
+      state.testFilters.search = "";
+      render();
+    });
+  }
+  const homeFilterSubject = document.getElementById("homeFilterSubject");
+  if (homeFilterSubject) homeFilterSubject.addEventListener("change", (e) => { state.testFilters.subjectId = e.target.value || null; render(); });
+  const homeFilterTag = document.getElementById("homeFilterTag");
+  if (homeFilterTag) homeFilterTag.addEventListener("change", (e) => { state.testFilters.tag = e.target.value || null; render(); });
+  const homeFilterSmiley = document.getElementById("homeFilterSmiley");
+  if (homeFilterSmiley) homeFilterSmiley.addEventListener("change", (e) => { state.testFilters.smiley = e.target.value === "" ? null : parseInt(e.target.value, 10); render(); });
+  const homeFilterDateFrom = document.getElementById("homeFilterDateFrom");
+  if (homeFilterDateFrom) homeFilterDateFrom.addEventListener("change", (e) => { state.testFilters.dateFrom = e.target.value; render(); });
+  const homeFilterDateTo = document.getElementById("homeFilterDateTo");
+  if (homeFilterDateTo) homeFilterDateTo.addEventListener("change", (e) => { state.testFilters.dateTo = e.target.value; render(); });
+  const homeFilterClearAll = document.getElementById("homeFilterClearAll");
+  if (homeFilterClearAll) {
+    homeFilterClearAll.addEventListener("click", () => {
+      state.testFilters = { search: "", tag: null, subjectId: null, smiley: null, dateFrom: "", dateTo: "" };
+      render();
+    });
+  }
+  root.querySelectorAll('[data-action="filter-tag-chip"]').forEach((chip) => {
+    chip.addEventListener("click", () => {
+      state.testFilters.tag = chip.dataset.tag;
+      if (state.tab !== "home") state.tab = "home";
+      render();
+    });
+  });
 
   root.querySelectorAll('[data-action="toggle-visible"]').forEach((el) => {
     el.addEventListener("click", () => {
@@ -1884,40 +2569,175 @@ function attachHandlers() {
     });
   }
 
-  // drag-and-drop manual reordering (only active when sort mode is "manual")
+  // manual reordering via Pointer Events (works for mouse, touch, and pen —
+  // unlike the HTML5 Drag and Drop API, which most mobile browsers don't support)
   const subjectRowsList = document.getElementById("subjectRowsList");
   if (subjectRowsList && state.subjectSort === "manual") {
-    let dragId = null;
-    subjectRowsList.querySelectorAll(".subject-row").forEach((row) => {
-      row.addEventListener("dragstart", (e) => {
-        dragId = row.dataset.subjectId;
-        row.classList.add("dragging");
-        e.dataTransfer.effectAllowed = "move";
+    let activeRow = null;
+    let pointerId = null;
+    let startY = 0;
+    let order = [];        // array of {el, top, height} in original (pre-drag) visual order
+    let startIndex = -1;
+    let currentIndex = -1;
+
+    const captureOrder = () => {
+      const rowEls = Array.from(subjectRowsList.querySelectorAll(".subject-row"));
+      return rowEls.map((el) => {
+        const rect = el.getBoundingClientRect();
+        return { el, top: rect.top, height: rect.height };
       });
-      row.addEventListener("dragend", () => {
-        row.classList.remove("dragging");
-        subjectRowsList.querySelectorAll(".subject-row").forEach((r) => r.classList.remove("drag-over"));
-      });
-      row.addEventListener("dragover", (e) => {
-        e.preventDefault();
-        if (row.dataset.subjectId !== dragId) row.classList.add("drag-over");
-      });
-      row.addEventListener("dragleave", () => row.classList.remove("drag-over"));
-      row.addEventListener("drop", (e) => {
-        e.preventDefault();
-        row.classList.remove("drag-over");
-        const targetId = row.dataset.subjectId;
-        if (!dragId || dragId === targetId) return;
-        const fromIdx = state.subjects.findIndex((s) => s.id === dragId);
-        const toIdx = state.subjects.findIndex((s) => s.id === targetId);
-        if (fromIdx === -1 || toIdx === -1) return;
-        const [moved] = state.subjects.splice(fromIdx, 1);
-        state.subjects.splice(toIdx, 0, moved);
+    };
+
+    const onPointerMove = (e) => {
+      if (pointerId === null || e.pointerId !== pointerId) return;
+      e.preventDefault();
+      const deltaY = e.clientY - startY;
+      activeRow.style.transform = `translateY(${deltaY}px)`;
+
+      // the active row's current visual center, based on its ORIGINAL top + how far it's moved
+      const startEntry = order[startIndex];
+      const activeMid = startEntry.top + startEntry.height / 2 + deltaY;
+
+      // find which slot that center now falls into, based on other rows' original positions
+      let newIndex = startIndex;
+      for (let i = 0; i < order.length; i++) {
+        if (i === startIndex) continue;
+        const entry = order[i];
+        const mid = entry.top + entry.height / 2;
+        if (i > startIndex && activeMid > mid) newIndex = Math.max(newIndex, i);
+        if (i < startIndex && activeMid < mid) newIndex = Math.min(newIndex, i);
+      }
+      // clamp newIndex to be monotonic relative to direction of travel from startIndex
+      if (deltaY >= 0) newIndex = Math.max(startIndex, newIndex);
+      else newIndex = Math.min(startIndex, newIndex);
+
+      if (newIndex !== currentIndex) {
+        // shift every row between currentIndex and newIndex out of the way visually
+        const lo = Math.min(currentIndex, newIndex);
+        const hi = Math.max(currentIndex, newIndex);
+        for (let i = lo; i <= hi; i++) {
+          if (i === startIndex) continue;
+          const entry = order[i];
+          const shiftDir = newIndex > startIndex ? -1 : 1; // rows move up if active moves down past them, vice versa
+          entry.el.classList.add("settling");
+          entry.el.style.transform = `translateY(${shiftDir * (startEntry.height)}px)`;
+        }
+        // rows outside the new [lo,hi] range that were previously shifted should reset
+        order.forEach((entry, i) => {
+          if (i !== startIndex && (i < lo || i > hi)) {
+            entry.el.style.transform = "";
+            entry.el.classList.remove("settling");
+          }
+        });
+        currentIndex = newIndex;
+      }
+    };
+
+    const onPointerUp = (e) => {
+      if (pointerId === null || e.pointerId !== pointerId) return;
+      activeRow.classList.remove("dragging");
+      activeRow.style.transform = "";
+      activeRow.style.zIndex = "";
+      order.forEach((entry) => { entry.el.style.transform = ""; entry.el.classList.remove("settling"); });
+
+      if (currentIndex !== startIndex) {
+        const movedId = activeRow.dataset.subjectId;
+        const fromIdx = state.subjects.findIndex((s) => s.id === movedId);
+        if (fromIdx !== -1) {
+          const [moved] = state.subjects.splice(fromIdx, 1);
+          // map currentIndex (a slot among the originally-rendered rows) to a target subject id
+          const referenceEntry = order[currentIndex];
+          const targetId = referenceEntry ? referenceEntry.el.dataset.subjectId : null;
+          let toIdx = targetId ? state.subjects.findIndex((s) => s.id === targetId) : state.subjects.length;
+          if (toIdx === -1) toIdx = state.subjects.length;
+          // if moving downward, the target row will shift up by one once removed, so insert AFTER it
+          if (currentIndex > startIndex) toIdx += 1;
+          state.subjects.splice(toIdx, 0, moved);
+        }
         persist();
-        render();
+      }
+      render();
+
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", onPointerUp);
+      window.removeEventListener("pointercancel", onPointerUp);
+      pointerId = null;
+      activeRow = null;
+    };
+
+    subjectRowsList.querySelectorAll('[data-action="drag-handle"]').forEach((handle) => {
+      handle.addEventListener("pointerdown", (e) => {
+        e.preventDefault();
+        activeRow = handle.closest(".subject-row");
+        if (!activeRow) return;
+        pointerId = e.pointerId;
+        startY = e.clientY;
+        order = captureOrder();
+        startIndex = order.findIndex((entry) => entry.el === activeRow);
+        currentIndex = startIndex;
+        activeRow.classList.add("dragging");
+        activeRow.style.zIndex = "10";
+
+        try { handle.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+        window.addEventListener("pointermove", onPointerMove, { passive: false });
+        window.addEventListener("pointerup", onPointerUp);
+        window.addEventListener("pointercancel", onPointerUp);
       });
     });
   }
+
+  root.querySelectorAll('[data-action="open-quick-log"]').forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const subjectId = btn.dataset.subject;
+      const entryId = btn.dataset.entry;
+      const subject = state.subjects.find((s) => s.id === subjectId);
+      const entry = subject && subject.entries.find((e) => e.id === entryId);
+      if (!subject || !entry) return;
+      const row = root.querySelector(`[data-upcoming-row="${entryId}"]`);
+      if (!row) return;
+      // close any other open quick-log forms first
+      root.querySelectorAll(".quick-log-form").forEach((f) => f.remove());
+      row.insertAdjacentHTML("beforeend", renderQuickLogForm(subject, entry));
+      const form = row.querySelector(".quick-log-form");
+      const valueInput = form.querySelector(".quick-log-value");
+      valueInput.focus();
+
+      let quickSmiley = null;
+      form.querySelectorAll(".smiley-btn").forEach((sBtn) => {
+        sBtn.addEventListener("click", () => {
+          const idx = parseInt(sBtn.dataset.smiley, 10);
+          quickSmiley = quickSmiley === idx ? null : idx;
+          form.querySelectorAll(".smiley-btn").forEach((b) => b.classList.toggle("smiley-selected", parseInt(b.dataset.smiley, 10) === quickSmiley));
+        });
+      });
+
+      form.querySelector('[data-action="cancel-quick-log"]').addEventListener("click", () => form.remove());
+
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const rawValue = valueInput.value;
+        const parsed = parseGradeInput(rawValue);
+        const sc = scaleDef();
+        const msgEl = form.querySelector(".quick-log-msg");
+
+        if (parsed === null) {
+          msgEl.innerHTML = `<div class="form-error">${icon("alert", 13)} ${escapeHtml(state.scale === 'finnish' ? t('ui.cannotReadGrade') : t('ui.enterNumericGrade'))}</div>`;
+          return;
+        }
+        if (parsed < sc.min || parsed > sc.max) {
+          msgEl.innerHTML = `<div class="form-error">${icon("alert", 13)} ${escapeHtml(t('ui.gradeRangeError', { min: sc.min, max: sc.max }))}</div>`;
+          return;
+        }
+
+        entry.value = parsed;
+        entry.upcoming = false;
+        entry.smiley = quickSmiley;
+        persist();
+        render();
+        showToast(`${icon("check", 14)} ${escapeHtml(t('ui.addedEntryToast', { value: formatGrade(parsed), subject: subject.name }))}`);
+      });
+    });
+  });
 
   root.querySelectorAll('[data-action="convert-upcoming"]').forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -2015,10 +2835,12 @@ function attachHandlers() {
     let entryType = TYPES.TEST;
     let selectedSmiley = null;
     const seg = document.getElementById("entryTypeSeg");
+    const tagsField = document.getElementById("entryTagsField");
     seg.querySelectorAll("button").forEach((btn) => {
       btn.addEventListener("click", () => {
         entryType = btn.dataset.type;
         seg.querySelectorAll("button").forEach((b) => b.classList.toggle("segmented-active", b === btn));
+        if (tagsField) tagsField.style.display = entryType === TYPES.TEST ? "" : "none";
       });
     });
 
@@ -2040,6 +2862,8 @@ function attachHandlers() {
       const rawValue = document.getElementById("entryValue").value;
       const label = document.getElementById("entryLabel").value.trim();
       const note = document.getElementById("entryNote").value.trim();
+      const tagsInput = document.getElementById("entryTags");
+      const tags = entryType === TYPES.TEST && tagsInput ? parseTags(tagsInput.value) : [];
       const msgEl = document.getElementById("entryFormMsg");
 
       const parsed = parseGradeInput(rawValue);
@@ -2063,7 +2887,7 @@ function attachHandlers() {
       }
 
       const subject = state.subjects.find((s) => s.id === subjectId);
-      subject.entries.push({ id: uid(), date, value: parsed, type: entryType, label, note, smiley: selectedSmiley, upcoming: false });
+      subject.entries.push({ id: uid(), date, value: parsed, type: entryType, label, note, smiley: selectedSmiley, upcoming: false, tags });
       persist();
 
       msgEl.innerHTML = `<div class="form-success">${icon("check", 13)} ${escapeHtml(t('ui.addedEntrySuccessForm', { value: formatGrade(parsed), subject: subject.name }))}</div>`;
@@ -2081,9 +2905,11 @@ function attachHandlers() {
       const subjectId = document.getElementById("upcomingSubject").value;
       const date = document.getElementById("upcomingDate").value;
       const label = document.getElementById("upcomingLabel").value.trim();
+      const tagsInput = document.getElementById("upcomingTags");
+      const tags = tagsInput ? parseTags(tagsInput.value) : [];
       if (!subjectId || !date) return;
       const subject = state.subjects.find((s) => s.id === subjectId);
-      subject.entries.push({ id: uid(), date, value: null, type: TYPES.TEST, label, note: "", smiley: null, upcoming: true });
+      subject.entries.push({ id: uid(), date, value: null, type: TYPES.TEST, label, note: "", smiley: null, upcoming: true, tags });
       persist();
       render();
       showToast(`${icon("check", 14)} ${escapeHtml(t('ui.addedUpcomingToast', { label: label || t('ui.entryTypeUpcoming'), subject: subject.name }))}`);
@@ -2097,28 +2923,111 @@ function attachHandlers() {
       const input = document.getElementById("newSubjectName");
       const name = input.value.trim();
       if (!name) return;
-      const s = { id: uid(), name, color: nextColor(), goal: null, entries: [] };
-      // remember current vertical scroll so render doesn't snap the viewport to top
-      const prevScroll = window.scrollY || document.documentElement.scrollTop || 0;
+      const s = { id: uid(), name, color: nextColor(), goal: null, groupId: null, entries: [] };
       state.subjects.push(s);
       state.visibleIds.add(s.id);
       persist();
       render();
-      // restore scroll and re-focus the new-subject input so user can keep typing
-      setTimeout(() => {
-        try {
-          window.scrollTo(0, prevScroll);
-          const newInput = document.getElementById("newSubjectName");
-          if (newInput) {
-            newInput.focus();
-            newInput.value = "";
-            newInput.setSelectionRange(0, 0);
-          }
-        } catch (err) { /* ignore */ }
-      }, 40);
       showToast(`${icon("check", 14)} ${escapeHtml(t('ui.addedSubjectToast', { name }))}`);
     });
   }
+
+  const addGroupForm = document.getElementById("addGroupForm");
+  if (addGroupForm) {
+    addGroupForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const input = document.getElementById("newGroupName");
+      const name = input.value.trim();
+      if (!name) return;
+      const g = { id: uid(), name, color: nextGroupColor() };
+      state.groups.push(g);
+      persist();
+      render();
+      showToast(`${icon("check", 14)} ${escapeHtml(t('ui.addedSubjectToast', { name }))}`);
+    });
+  }
+
+  root.querySelectorAll('[data-action="rename-group"]').forEach((input) => {
+    input.addEventListener("change", () => {
+      const g = groupById(input.dataset.id);
+      const val = input.value.trim();
+      if (!g) return;
+      if (val) { g.name = val; persist(); render(); }
+      else input.value = g.name;
+    });
+  });
+
+  root.querySelectorAll('[data-action="set-group-parent"]').forEach((select) => {
+    select.addEventListener("change", () => {
+      const g = groupById(select.dataset.id);
+      if (!g) return;
+      const newParentId = select.value || null;
+      // defense-in-depth: reject if this would create a cycle, even though the dropdown
+      // already excludes invalid options under normal rendering
+      if (newParentId === g.id || (newParentId && isDescendantOf(newParentId, g.id))) {
+        select.value = g.parentId || "";
+        showToast(`${icon("alert", 14)} ${escapeHtml(t('ui.cannotNestCycle'))}`);
+        return;
+      }
+      g.parentId = newParentId;
+      persist();
+      render();
+    });
+  });
+
+  root.querySelectorAll('[data-action="open-group-color"]').forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const existing = btn.parentElement.querySelector(".color-picker");
+      if (existing) { existing.remove(); return; }
+      document.querySelectorAll(".color-picker, .group-select-menu").forEach((p) => p.remove());
+      const g = groupById(btn.dataset.id);
+      if (!g) return;
+      const picker = document.createElement("div");
+      picker.className = "color-picker";
+      picker.innerHTML = `
+        <div class="color-grid">
+          ${COLOR_SWATCHES.map((c) => `<button type="button" class="color-swatch ${c === g.color ? 'color-swatch-active' : ''}" style="background:${c}" data-color="${c}"></button>`).join("")}
+        </div>
+        <label class="color-custom"><span>Custom</span><input type="color" value="${g.color}" /></label>
+      `;
+      btn.parentElement.appendChild(picker);
+      picker.querySelectorAll(".color-swatch").forEach((sw) => {
+        sw.addEventListener("click", () => { g.color = sw.dataset.color; persist(); render(); });
+      });
+      picker.querySelector('input[type="color"]').addEventListener("input", (ev) => { g.color = ev.target.value; persist(); render(); });
+      const closeHandler = (ev) => {
+        if (!picker.contains(ev.target) && ev.target !== btn) {
+          picker.remove();
+          document.removeEventListener("click", closeHandler);
+        }
+      };
+      setTimeout(() => document.addEventListener("click", closeHandler), 0);
+    });
+  });
+
+  root.querySelectorAll('[data-action="delete-group"]').forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const g = groupById(btn.dataset.id);
+      if (!g) return;
+      const childCount = childGroups(g.id).length;
+      confirmModal({
+        title: t('ui.groupDeleteConfirmTitle'),
+        body: childCount ? t('ui.groupDeleteConfirmBodyWithChildren', { count: childCount }) : t('ui.groupDeleteConfirmBody'),
+        confirmLabel: t('ui.deleteConfirm'),
+        danger: true,
+        onConfirm: () => {
+          // promote direct subjects and child groups up to the deleted group's own parent
+          // (deleting a folder moves its contents up one level, rather than scattering to root)
+          state.subjects.forEach((s) => { if (s.groupId === g.id) s.groupId = g.parentId || null; });
+          state.groups.forEach((other) => { if (other.parentId === g.id) other.parentId = g.parentId || null; });
+          state.groups = state.groups.filter((x) => x.id !== g.id);
+          persist();
+          render();
+        },
+      });
+    });
+  });
 
   root.querySelectorAll('[data-action="rename"]').forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -2166,6 +3075,69 @@ function attachHandlers() {
       subject.goal = null;
       persist();
       render();
+    });
+  });
+
+  root.querySelectorAll('[data-action="open-group-menu"]').forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const existing = btn.parentElement.querySelector(".group-select-menu");
+      if (existing) { existing.remove(); return; }
+      document.querySelectorAll(".group-select-menu, .color-picker").forEach((p) => p.remove());
+      const id = btn.dataset.id;
+      const subject = state.subjects.find((s) => s.id === id);
+      const menu = document.createElement("div");
+      menu.className = "group-select-menu";
+      const renderMenuOptions = () => `
+        <button type="button" class="group-select-option ${!subject.groupId ? 'selected' : ''}" data-group-id="">
+          ${icon("x", 13)} ${escapeHtml(t('ui.noGroup'))}
+        </button>
+        ${state.groups.length ? `<div class="group-select-divider"></div>` : ""}
+        ${state.groups.map((g) => `
+          <button type="button" class="group-select-option ${subject.groupId === g.id ? 'selected' : ''}" data-group-id="${g.id}">
+            <span class="subject-dot-sm" style="background:${g.color}"></span> ${escapeHtml(g.name)}
+          </button>
+        `).join("")}
+        <div class="group-select-divider"></div>
+        <div class="group-select-new">
+          <input type="text" placeholder="${escapeHtml(t('ui.newGroupPlaceholder'))}" />
+          <button type="button" class="btn-secondary" style="padding:5px 9px;">${icon("plus", 13)}</button>
+        </div>
+      `;
+      menu.innerHTML = renderMenuOptions();
+      btn.parentElement.appendChild(menu);
+
+      const wireOptions = () => {
+        menu.querySelectorAll(".group-select-option").forEach((opt) => {
+          opt.addEventListener("click", () => {
+            subject.groupId = opt.dataset.groupId || null;
+            persist();
+            render();
+          });
+        });
+        const newInput = menu.querySelector(".group-select-new input");
+        const newBtn = menu.querySelector(".group-select-new button");
+        const createGroup = () => {
+          const name = newInput.value.trim();
+          if (!name) return;
+          const g = { id: uid(), name, color: nextGroupColor() };
+          state.groups.push(g);
+          subject.groupId = g.id;
+          persist();
+          render();
+        };
+        newBtn.addEventListener("click", createGroup);
+        newInput.addEventListener("keydown", (ev) => { if (ev.key === "Enter") { ev.preventDefault(); createGroup(); } });
+      };
+      wireOptions();
+
+      const closeHandler = (ev) => {
+        if (!menu.contains(ev.target) && ev.target !== btn) {
+          menu.remove();
+          document.removeEventListener("click", closeHandler);
+        }
+      };
+      setTimeout(() => document.addEventListener("click", closeHandler), 0);
     });
   });
 
@@ -2299,8 +3271,10 @@ async function init() {
         name: s.name,
         color: s.color,
         goal: s.goal ?? null,
-        entries: (s.entries || []).map((e) => ({ note: "", smiley: null, upcoming: false, ...e })),
+        groupId: s.groupId ?? null,
+        entries: (s.entries || []).map((e) => ({ note: "", smiley: null, upcoming: false, tags: [], ...e })),
       }));
+      state.groups = Array.isArray(data.groups) ? data.groups.map((g) => ({ parentId: null, ...g })) : [];
       state.scale = data.scale && SCALES[data.scale] ? data.scale : state.scale;
       state.showAverages = data.showAverages !== undefined ? data.showAverages : state.showAverages;
       state.showGoals = data.showGoals !== undefined ? data.showGoals : state.showGoals;
@@ -2309,8 +3283,10 @@ async function init() {
       state.subjectSort = data.subjectSort || "manual";
       state.subjectSortDir = data.subjectSortDir || "asc";
       state.visibleIds = data.visibleIds && data.visibleIds.length ? new Set(data.visibleIds) : new Set(state.subjects.map((s) => s.id));
+      state.collapsedGroupIds = Array.isArray(data.collapsedGroupIds) ? new Set(data.collapsedGroupIds) : new Set();
     } else {
       state.subjects = makeDefaultSubjects(state.scale);
+      state.groups = makeDefaultGroups();
       state.visibleIds = new Set(state.subjects.map((s) => s.id));
     }
     state.loaded = true;
