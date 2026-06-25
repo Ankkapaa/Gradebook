@@ -27,6 +27,30 @@
   --font-mono: 'JetBrains Mono', 'IBM Plex Mono', 'SF Mono', Consolas, monospace;
 }
 
+[data-theme="dark"] {
+  --paper: #1A1F2B;
+  --paper-raised: #232938;
+  --ink: #EDEDE4;
+  --ink-soft: #B7BECC;
+  --ink-faint: #707A8C;
+  --rule: #313847;
+  --rule-strong: #3D4456;
+  --red: #E0654A;
+  --red-soft: #E0654A26;
+  --sage: #7FA67F;
+  --sage-soft: #7FA67F26;
+  --gold: #CC9A5C;
+  --gold-soft: #CC9A5C26;
+}
+
+/* Overlay surfaces (tooltips, toasts) intentionally stay dark-on-light-text in both
+   themes, the same way they would in most native apps — using --ink/--paper here would
+   invert in dark mode and produce a pale bubble with dark text, which reads as broken. */
+:root, [data-theme="dark"] {
+  --overlay-bg: #1B2A41;
+  --overlay-text: #FAF6EE;
+}
+
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
 
@@ -129,6 +153,11 @@ a { color: inherit; }
 /* ---------- Chart panel ---------- */
 .chart-panel { background: var(--paper-raised); border: 1.5px solid var(--rule-strong); border-radius: 12px; padding: 18px 14px 14px; }
 .chart-panel-header { display: flex; align-items: center; gap: 8px; padding: 0 4px 12px; color: var(--ink); }
+.chart-save-image-btn {
+  margin-left: auto; border: 1.5px solid var(--rule-strong); background: var(--paper); color: var(--ink-soft);
+  border-radius: 7px; padding: 6px 8px; cursor: pointer; display: flex; align-items: center;
+}
+.chart-save-image-btn:hover { border-color: var(--ink); color: var(--ink); }
 .chart-panel-header h3 { font-family: var(--font-display); font-size: 16px; font-weight: 600; margin: 0; }
 .chart-canvas-wrap { position: relative; height: 320px; }
 .empty-chart { padding: 40px 20px; text-align: center; color: var(--ink-faint); font-size: 13.5px; font-style: italic; font-family: var(--font-display); }
@@ -154,7 +183,7 @@ a { color: inherit; }
 .form-error { display: flex; align-items: center; gap: 6px; color: var(--red); font-size: 12.5px; font-weight: 600; }
 .form-success { display: flex; align-items: center; gap: 6px; color: var(--sage); font-size: 12.5px; font-weight: 600; }
 
-.btn-primary, .btn-secondary, .btn-ghost {
+.btn-primary, .btn-secondary, .btn-ghost, .btn-danger-outline {
   display: inline-flex; align-items: center; justify-content: center; gap: 6px; border-radius: 8px;
   font-weight: 700; font-size: 13.5px; cursor: pointer; font-family: var(--font-body); border: none;
   padding: 10px 16px; transition: transform 0.1s, opacity 0.15s;
@@ -166,8 +195,8 @@ a { color: inherit; }
 .btn-secondary:not(:disabled):hover { border-color: var(--ink); }
 .btn-ghost { background: transparent; color: var(--ink-soft); border: 1.5px solid transparent; padding: 7px 11px; font-size: 12.5px; }
 .btn-ghost:hover { background: var(--rule); }
-.btn-danger-outline { background: var(--paper); color: var(--red); border: 1.5px solid var(--red); }
-.btn-danger-outline:hover { background: var(--red-soft); }
+.btn-danger-outline { background: var(--paper); color: var(--red); border: 1.5px solid var(--red); padding: 10px 18px; align-self: flex-start; }
+.btn-danger-outline:hover { background: var(--red-soft); border-color: var(--red); }
 
 /* ---------- Subject rows ---------- */
 .subject-rows { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
@@ -250,6 +279,35 @@ a { color: inherit; }
 .tag-chip[data-action="filter-tag-chip"] { cursor: pointer; border: 1px solid transparent; }
 .tag-chip[data-action="filter-tag-chip"]:hover { border-color: var(--gold); }
 
+/* Tag picker widget: chips + search/create dropdown */
+.tag-picker { display: flex; flex-direction: column; gap: 6px; }
+.tag-picker-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.tag-chip-removable { padding-right: 4px; }
+.tag-chip-removable-static { padding-right: 4px; }
+.tag-chip-remove { border: none; background: transparent; color: inherit; cursor: pointer; display: inline-flex; padding: 1px; margin-left: 1px; opacity: 0.7; }
+.tag-chip-remove:hover { opacity: 1; }
+.tag-picker-input-wrap { position: relative; }
+.field .tag-picker-input {
+  width: 100%; border: 1.5px solid var(--rule-strong); background: var(--paper); border-radius: 8px; padding: 9px 10px;
+  font-size: 14px; font-family: var(--font-body); color: var(--ink); transition: border-color 0.15s;
+}
+.field .tag-picker-input:hover { border-color: var(--ink-faint); }
+.field .tag-picker-input:focus { border-color: var(--red); outline: none; }
+.tag-picker-dropdown {
+  position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: var(--paper-raised); border: 1.5px solid var(--rule-strong);
+  border-radius: 10px; padding: 6px; box-shadow: 0 8px 24px rgba(27,42,65,0.18); z-index: 50; max-height: 220px; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.tag-picker-dropdown[hidden] { display: none; }
+.tag-picker-option {
+  display: flex; align-items: center; gap: 7px; border: none; background: transparent; border-radius: 7px;
+  padding: 8px 10px; font-size: 13px; cursor: pointer; text-align: left; font-family: var(--font-body); color: var(--ink); width: 100%;
+}
+.tag-picker-option:hover { background: var(--rule); }
+.tag-picker-create { color: var(--sage); font-weight: 600; border-top: 1px solid var(--rule); margin-top: 2px; padding-top: 9px; }
+.tag-picker-create:hover { background: var(--sage-soft); }
+.tag-picker-empty { padding: 10px; font-size: 12.5px; color: var(--ink-faint); font-style: italic; font-family: var(--font-display); text-align: center; }
+
 /* Group dropdown + badges */
 .group-select-anchor { position: relative; flex-shrink: 0; }
 .group-select-btn {
@@ -269,6 +327,7 @@ a { color: inherit; }
   padding: 7px 9px; font-size: 13px; cursor: pointer; text-align: left; font-family: var(--font-body); color: var(--ink);
 }
 .group-select-option:hover { background: var(--rule); }
+.group-select-nest-indicator { color: var(--ink-faint); display: flex; flex-shrink: 0; margin-right: -2px; }
 .group-select-option.selected { background: var(--gold-soft); color: var(--gold); font-weight: 700; }
 .group-select-divider { height: 1px; background: var(--rule); margin: 4px 2px; }
 .group-select-new { display: flex; gap: 6px; padding: 6px 4px 2px; }
@@ -308,11 +367,12 @@ a { color: inherit; }
 .test-search-panel { padding-bottom: 14px; }
 .test-search-toggle {
   width: 100%; background: transparent; border: none; cursor: pointer; display: flex; align-items: center;
-  justify-content: space-between; padding: 0 0 14px; font-family: var(--font-display); font-size: 17px; font-weight: 600;
-  color: var(--ink); margin: 0; border-bottom: 1.5px solid var(--rule);
+  justify-content: space-between; padding: 0; font-family: var(--font-display); font-size: 17px; font-weight: 600;
+  color: var(--ink); margin: 0;
 }
 .test-search-toggle span:first-child { display: flex; align-items: center; gap: 8px; }
 .test-search-toggle .group-collapse-chevron { color: var(--ink-faint); }
+.test-search-panel.is-expanded .test-search-toggle { padding-bottom: 14px; border-bottom: 1.5px solid var(--rule); margin-bottom: 0; }
 
 .test-search-bar { display: flex; align-items: center; gap: 8px; background: var(--paper); border: 1.5px solid var(--rule-strong); border-radius: 10px; padding: 9px 12px; margin: 14px 0 12px; }
 .test-search-bar svg { flex-shrink: 0; color: var(--ink-faint); }
@@ -326,12 +386,28 @@ a { color: inherit; }
 }
 .test-filter-select.active-filter { border-color: var(--red); background: var(--red-soft); color: var(--red); font-weight: 700; }
 
+.tag-filter-anchor { position: relative; }
+.tag-filter-btn { display: inline-flex; align-items: center; gap: 6px; max-width: 160px; }
+.tag-filter-btn span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tag-filter-dropdown {
+  position: absolute; top: calc(100% + 6px); left: 0; background: var(--paper-raised); border: 1.5px solid var(--rule-strong);
+  border-radius: 10px; padding: 6px; box-shadow: 0 8px 24px rgba(27,42,65,0.18); z-index: 50; min-width: 200px;
+  max-height: 260px; overflow-y: auto; display: flex; flex-direction: column; gap: 2px;
+}
+.tag-filter-option-row { display: flex; align-items: center; gap: 2px; }
+.tag-filter-option { flex: 1; }
+.tag-filter-delete-btn {
+  border: none; background: transparent; color: var(--ink-faint); cursor: pointer; padding: 6px; border-radius: 6px;
+  display: flex; align-items: center; flex-shrink: 0;
+}
+.tag-filter-delete-btn:hover { background: var(--red-soft); color: var(--red); }
+
 .test-filter-date-field { display: flex; flex-direction: column; gap: 3px; }
 .test-filter-date-field span { font-size: 10px; font-weight: 700; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.03em; }
 .test-filter-date {
-  border: 1.5px solid var(--rule-strong); border-radius: 8px; padding: 6px 8px; font-size: 12.5px; background: var(--paper-raised);
-  color: var(--ink); font-family: var(--font-body); cursor: pointer; height: 34px; box-sizing: border-box;
-  min-width: 132px; width: auto; line-height: 1.2; -webkit-appearance: none; appearance: none;
+  border: 1.5px solid var(--rule-strong); border-radius: 8px; padding: 7px 8px; font-size: 12.5px; background: var(--paper-raised);
+  color: var(--ink); font-family: var(--font-body); cursor: pointer; min-height: 34px; box-sizing: border-box;
+  min-width: 132px; width: auto; line-height: 1.2;
 }
 .test-filter-date::-webkit-calendar-picker-indicator { opacity: 0.6; cursor: pointer; }
 .test-filter-date.active-filter { border-color: var(--red); background: var(--red-soft); color: var(--red); }
@@ -347,8 +423,9 @@ a { color: inherit; }
 .home-test-list { display: flex; flex-direction: column; gap: 8px; }
 .home-test-row {
   display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1.5px solid var(--rule); border-radius: 10px;
-  background: var(--paper-raised); flex-wrap: wrap;
+  background: var(--paper-raised); flex-wrap: wrap; cursor: pointer; transition: border-color 0.15s, box-shadow 0.15s;
 }
+.home-test-row:hover { border-color: var(--ink-faint); box-shadow: 0 2px 8px rgba(27,42,65,0.08); }
 .home-test-row.is-upcoming { border-style: dashed; border-color: var(--gold); }
 .home-test-row-date { font-family: var(--font-mono); font-size: 12px; font-weight: 700; color: var(--ink-soft); min-width: 56px; }
 .home-test-row-subject { display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: 13.5px; min-width: 90px; }
@@ -402,7 +479,8 @@ a { color: inherit; }
 .entry-filter button.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 
 .entry-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
-.entry-row { display: grid; grid-template-columns: 56px 56px 1fr 44px 24px; align-items: center; gap: 8px; padding: 7px 4px; border-bottom: 1px solid var(--rule); font-size: 12.5px; }
+.entry-row { display: grid; grid-template-columns: 56px 56px 1fr 44px 24px; align-items: center; gap: 8px; padding: 7px 4px; border-bottom: 1px solid var(--rule); font-size: 12.5px; cursor: pointer; border-radius: 6px; }
+.entry-row:hover { background: var(--rule); }
 .entry-row:last-child { border-bottom: none; }
 .entry-row-note { grid-column: 1 / -1; font-size: 11.5px; color: var(--ink-faint); font-style: italic; padding: 0 4px 6px 4px; border-bottom: 1px solid var(--rule); }
 .entry-date { font-family: var(--font-mono); color: var(--ink-faint); }
@@ -435,11 +513,29 @@ input[type="file"] { display: none; }
 /* ---------- Toast ---------- */
 .gt-toast {
   position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(20px);
-  background: var(--ink); color: var(--paper); padding: 10px 18px; border-radius: 8px; font-size: 13px;
+  background: var(--overlay-bg); color: var(--overlay-text); padding: 10px 18px; border-radius: 8px; font-size: 13px;
   box-shadow: 0 8px 24px rgba(0,0,0,0.25); z-index: 100; opacity: 0; transition: opacity 0.25s, transform 0.25s; pointer-events: none;
   display: flex; align-items: center; gap: 8px;
 }
 .gt-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ---------- Backup reminder banner ---------- */
+.backup-banner {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 95;
+  background: var(--overlay-bg); color: var(--overlay-text); padding: 12px 16px; display: flex; align-items: center; gap: 10px;
+  box-shadow: 0 -4px 16px rgba(0,0,0,0.18); font-size: 13px; flex-wrap: wrap;
+}
+.backup-banner svg { flex-shrink: 0; color: var(--gold); }
+.backup-banner-text { flex: 1; min-width: 140px; }
+.backup-banner-action {
+  display: inline-flex; align-items: center; gap: 6px; border: 1.5px solid var(--overlay-text); background: transparent; color: var(--overlay-text);
+  border-radius: 7px; padding: 7px 12px; font-size: 12.5px; font-weight: 700; cursor: pointer; font-family: var(--font-body); white-space: nowrap;
+}
+.backup-banner-action:hover { background: var(--overlay-text); color: var(--overlay-bg); }
+.backup-banner-dismiss { border: none; background: transparent; color: var(--overlay-text); opacity: 0.7; cursor: pointer; padding: 4px; display: flex; flex-shrink: 0; }
+.backup-banner-dismiss:hover { opacity: 1; }
+body.has-backup-banner .gt-main { padding-bottom: 130px; }
+body.has-backup-banner .gt-footer { margin-bottom: 56px; }
 
 /* ---------- Modal (confirm dialogs) ---------- */
 .gt-modal-backdrop { position: fixed; inset: 0; background: rgba(27,42,65,0.4); display: flex; align-items: center; justify-content: center; z-index: 90; padding: 20px; }
@@ -447,6 +543,19 @@ input[type="file"] { display: none; }
 .gt-modal h4 { margin: 0 0 8px; font-family: var(--font-display); font-size: 17px; }
 .gt-modal p { margin: 0 0 16px; font-size: 13.5px; color: var(--ink-soft); }
 .gt-modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+/* ---------- Test detail modal ---------- */
+.gt-modal-wide { max-width: 480px; max-height: 88vh; overflow-y: auto; }
+.detail-modal-header { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
+.detail-modal-header h4 { margin: 0; }
+.detail-view { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+.detail-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--rule); }
+.detail-row:last-child { border-bottom: none; padding-bottom: 0; }
+.detail-row-label { font-size: 11px; font-weight: 700; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.03em; white-space: nowrap; padding-top: 2px; }
+.detail-row-value { display: flex; align-items: center; gap: 6px; font-size: 14px; color: var(--ink); text-align: right; flex-wrap: wrap; justify-content: flex-end; }
+.detail-row-note { flex-direction: column; align-items: stretch; }
+.detail-note-text { margin: 4px 0 0; font-size: 13.5px; color: var(--ink-soft); font-style: italic; text-align: left; }
+.detail-modal-actions { margin-top: 4px; align-items: center; }
 
 /* ---------- Icons (inline SVG via mask, simple line icons) ---------- */
 svg { display: block; }
@@ -487,6 +596,9 @@ svg { display: block; }
       <button data-tab="settings" data-tab-icon="settings" data-i18n-key="tabs.settings"><span class="tab-icon" data-icon="settings"></span><span class="label"></span></button>
     </nav>
     <div style="display:flex; gap:8px; align-items:center;">
+      <button type="button" id="themeToggleBtn" class="icon-btn" title="Toggle dark mode" style="border:1px solid var(--rule-strong); border-radius:6px; padding:6px;">
+        <span id="themeToggleIcon"></span>
+      </button>
       <select id="langSelect" style="border:1px solid var(--rule-strong); padding:6px; border-radius:6px; font-family:var(--font-body);">
         <option value="en">English</option>
         <option value="fi">Suomi</option>
@@ -546,6 +658,8 @@ function icon(name, size) {
     search: `<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>`,
     filter: `<path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/>`,
     chevronDownSm: `<polyline points="6 9 12 15 18 9"/>`,
+    sun: `<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>`,
+    moon: `<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>`,
   };
   return `<svg ${common}>${paths[name] || ''}</svg>`;
 }
@@ -594,7 +708,10 @@ const TRANSLATIONS = {
       clearPromptTitle: "Clear all data?",
       clearPromptBody: "This removes every subject and grade permanently. This cannot be undone.",
       clearConfirm: "Clear everything",
-      deleteConfirm: "Delete subject",
+      deleteSubjectConfirm: "Delete subject",
+      deleteTestConfirm: "Delete test",
+      deleteTagConfirm: "Delete tag",
+      deleteGroupConfirm: "Delete group",
       deleteSubjectTitle: "Delete {name}?",
       deleteSubjectBody: "This removes the subject and all {count} grade(s) attached to it. This cannot be undone.",
       switchScaleTitle: "Switch grading scale?",
@@ -654,6 +771,22 @@ const TRANSLATIONS = {
       selfAssessmentOptional: "Self-assessment (optional)",
       tagsOptional: "Tags (optional)",
       tagsPlaceholder: "e.g. algebra, midterm",
+      tagsSearchPlaceholder: "Search or create a tag",
+      createTagBtn: "Create tag \"{tag}\"",
+      noTagsYet: "No tags yet — type to create one.",
+      removeTag: "Remove tag",
+      editTest: "Edit test",
+      testDetails: "Test details",
+      chart: "Chart",
+      selfAssessment: "Self-assessment",
+      saveChanges: "Save changes",
+      testUpdatedToast: "Test updated",
+      deleteTestConfirmTitle: "Delete this test?",
+      deleteTestConfirmBody: "This permanently removes this entry. This cannot be undone.",
+      deleteTagEverywhere: "Delete this tag everywhere",
+      deleteTagConfirmTitle: "Delete tag \"{tag}\"?",
+      deleteTagConfirmBody: "This removes the tag from every test that has it. The tests themselves are not deleted. This cannot be undone.",
+      tagDeletedToast: "Deleted tag \"{tag}\"",
       assignGroup: "Assign to group",
       noGroup: "No group",
       newGroup: "New group",
@@ -680,6 +813,19 @@ const TRANSLATIONS = {
       noTestsYet: "No tests logged yet. Add one from Manage.",
       searchTests: "Search tests",
       groupEmpty: "This group is empty.",
+      appearance: "Appearance",
+      darkMode: "Dark mode",
+      darkModeDesc: "Switch between light and dark color themes.",
+      backupBannerText: "It's been a while since your last backup. Save a copy just in case.",
+      backupBannerAction: "Back up now",
+      backupBannerDismiss: "Remind me later",
+      exportText: "Export as text",
+      exportSuccessText: "Saved grades as a text file",
+      textExportTitle: "Gradebook export",
+      textExportGeneratedOn: "Generated on",
+      saveChartImage: "Save chart as image",
+      exportSuccessImage: "Chart saved as an image",
+      noChartToExport: "Nothing to export yet — add some grades first.",
       smileyAwful: "Awful",
       smileyBad: "Not great",
       smileyOkay: "Okay",
@@ -810,6 +956,22 @@ const TRANSLATIONS = {
       selfAssessmentOptional: "Itsearviointi (valinnainen)",
       tagsOptional: "Tagit (valinnainen)",
       tagsPlaceholder: "esim. algebra, välikoe",
+      tagsSearchPlaceholder: "Hae tai luo tagi",
+      createTagBtn: "Luo tagi \"{tag}\"",
+      noTagsYet: "Ei tageja vielä — kirjoita luodaksesi yhden.",
+      removeTag: "Poista tagi",
+      editTest: "Muokkaa koetta",
+      testDetails: "Kokeen tiedot",
+      chart: "Kaavio",
+      selfAssessment: "Itsearviointi",
+      saveChanges: "Tallenna muutokset",
+      testUpdatedToast: "Koe päivitetty",
+      deleteTestConfirmTitle: "Poistetaanko tämä koe?",
+      deleteTestConfirmBody: "Tämä poistaa merkinnän pysyvästi. Tätä ei voi peruuttaa.",
+      deleteTagEverywhere: "Poista tämä tagi kaikkialta",
+      deleteTagConfirmTitle: "Poistetaanko tagi \"{tag}\"?",
+      deleteTagConfirmBody: "Tämä poistaa tagin kaikista kokeista, joissa se on. Itse kokeita ei poisteta. Tätä ei voi peruuttaa.",
+      tagDeletedToast: "Tagi \"{tag}\" poistettu",
       assignGroup: "Lisää ryhmään",
       noGroup: "Ei ryhmää",
       newGroup: "Uusi ryhmä",
@@ -836,6 +998,19 @@ const TRANSLATIONS = {
       noTestsYet: "Ei kirjattuja kokeita vielä. Lisää yksi Hallitse-välilehdellä.",
       searchTests: "Hae kokeita",
       groupEmpty: "Tämä ryhmä on tyhjä.",
+      appearance: "Ulkoasu",
+      darkMode: "Tumma tila",
+      darkModeDesc: "Vaihda vaalean ja tumman teeman välillä.",
+      backupBannerText: "Edellisestä varmuuskopiosta on aikaa. Tallenna kopio varmuuden vuoksi.",
+      backupBannerAction: "Varmuuskopioi nyt",
+      backupBannerDismiss: "Muistuta myöhemmin",
+      exportText: "Vie tekstinä",
+      exportSuccessText: "Arvosanat tallennettu tekstitiedostoon",
+      textExportTitle: "Arvosanakirjan vienti",
+      textExportGeneratedOn: "Luotu",
+      saveChartImage: "Tallenna kaavio kuvana",
+      exportSuccessImage: "Kaavio tallennettu kuvana",
+      noChartToExport: "Ei vielä mitään vietävää — lisää ensin arvosanoja.",
       smileyAwful: "Surkea",
       smileyBad: "Ei hyvä",
       smileyOkay: "Ok",
@@ -905,15 +1080,6 @@ const fmtDate = (iso) => {
 const escapeHtml = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
 
 // tags are entered as a comma-separated string and stored as a normalized lowercase array
-function parseTags(raw) {
-  if (!raw) return [];
-  return Array.from(new Set(
-    raw.split(",")
-      .map((t) => t.trim().toLowerCase())
-      .filter(Boolean)
-  )).slice(0, 8); // cap to keep chips manageable
-}
-
 function allTagsInUse() {
   const set = new Set();
   state.subjects.forEach((s) => s.entries.forEach((e) => (e.tags || []).forEach((tg) => set.add(tg))));
@@ -1093,6 +1259,9 @@ const state = {
   testSearchCollapsed: true,
   hasStorage: (typeof window !== "undefined") && (!!window.storage || (function(){ try { localStorage.setItem("__gt_test","1"); localStorage.removeItem("__gt_test"); return true;} catch(e){return false;} })()),
   lang: (function(){ try { const v = (window.localStorage && localStorage.getItem(STORAGE_KEY + ':lang')) || null; return v || 'en'; } catch(e){ return 'en'; } })(),
+  theme: (function(){ try { const v = (window.localStorage && localStorage.getItem(STORAGE_KEY + ':theme')) || null; return v || 'light'; } catch(e){ return 'light'; } })(),
+  lastBackupAt: (function(){ try { return (window.localStorage && localStorage.getItem(STORAGE_KEY + ':lastBackupAt')) || null; } catch(e){ return null; } })(),
+  backupBannerDismissedAt: (function(){ try { return (window.localStorage && localStorage.getItem(STORAGE_KEY + ':backupBannerDismissedAt')) || null; } catch(e){ return null; } })(),
 };
 
 const charts = {}; // canvas chart instances by panel id
@@ -1195,6 +1364,7 @@ function persist() {
         localStorage.setItem(STORAGE_KEY, payload);
       }
       try { localStorage.setItem(STORAGE_KEY + ':lang', state.lang); } catch (e) {}
+      try { localStorage.setItem(STORAGE_KEY + ':theme', state.theme); } catch (e) {}
     } catch (e) { /* ignore */ }
   }, 350);
 }
@@ -1203,6 +1373,10 @@ function persist() {
    GRADE HELPERS
 ====================================================================== */
 function scaleDef() { return SCALES[state.scale]; }
+
+function themeColor(varName) {
+  return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+}
 
 function clampToScale(n) {
   const sc = scaleDef();
@@ -1345,6 +1519,253 @@ function showToast(msg) {
 /* ======================================================================
    MODAL (confirm)
 ====================================================================== */
+function openTestDetailModal(subjectId, entryId) {
+  const subject = state.subjects.find((s) => s.id === subjectId);
+  const entry = subject && subject.entries.find((e) => e.id === entryId);
+  if (!subject || !entry) return;
+  renderTestDetailModal(subject, entry, false);
+}
+
+function closeTestDetailModal() {
+  document.getElementById("modalRoot").innerHTML = "";
+}
+
+function renderTestDetailModal(subject, entry, editing) {
+  const root = document.getElementById("modalRoot");
+  const typeLabel = entry.type === TYPES.TEST ? t('ui.testLabel') : t('ui.reportLabel');
+
+  root.innerHTML = `
+    <div class="gt-modal-backdrop" id="detailModalBackdrop">
+      <div class="gt-modal gt-modal-wide">
+        <div class="detail-modal-header">
+          <h4>${editing ? escapeHtml(t('ui.editTest')) : escapeHtml(t('ui.testDetails'))}</h4>
+          <button type="button" class="icon-btn" id="detailModalClose">${icon("x", 16)}</button>
+        </div>
+        <div id="detailModalBody"></div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById("detailModalClose").addEventListener("click", closeTestDetailModal);
+  document.getElementById("detailModalBackdrop").addEventListener("click", (e) => {
+    if (e.target.id === "detailModalBackdrop") closeTestDetailModal();
+  });
+
+  const body = document.getElementById("detailModalBody");
+  if (editing) {
+    body.innerHTML = renderTestEditForm(subject, entry);
+    wireTestEditForm(subject, entry);
+  } else {
+    body.innerHTML = renderTestReadView(subject, entry, typeLabel);
+    document.getElementById("detailEditBtn").addEventListener("click", () => renderTestDetailModal(subject, entry, true));
+    const deleteBtn = document.getElementById("detailDeleteBtn");
+    if (deleteBtn) {
+      deleteBtn.addEventListener("click", () => {
+        confirmModal({
+          title: t('ui.deleteTestConfirmTitle'),
+          body: t('ui.deleteTestConfirmBody'),
+          confirmLabel: t('ui.deleteTestConfirm'),
+          danger: true,
+          onConfirm: () => {
+            subject.entries = subject.entries.filter((e) => e.id !== entry.id);
+            persist();
+            closeTestDetailModal();
+            render();
+          },
+        });
+      });
+    }
+    const logResultBtn = document.getElementById("detailLogResultBtn");
+    if (logResultBtn) {
+      logResultBtn.addEventListener("click", () => {
+        entry.upcoming = false;
+        if (entry.value === null || entry.value === undefined) entry.value = scaleDef().min;
+        renderTestDetailModal(subject, entry, true);
+      });
+    }
+  }
+}
+
+function renderTestReadView(subject, entry, typeLabel) {
+  return `
+    <div class="detail-view">
+      <div class="detail-row">
+        <span class="detail-row-label">${escapeHtml(t('ui.subject'))}</span>
+        <span class="detail-row-value"><span class="subject-dot-sm" style="background:${subject.color}"></span> ${escapeHtml(subject.name)}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-row-label">${escapeHtml(t('ui.testDate'))}</span>
+        <span class="detail-row-value">${fmtDate(entry.date)}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-row-label">${escapeHtml(t('ui.testsQuizzes'))}/${escapeHtml(t('ui.reportCard'))}</span>
+        <span class="detail-row-value">${escapeHtml(typeLabel)}</span>
+      </div>
+      ${entry.label ? `
+      <div class="detail-row">
+        <span class="detail-row-label">${escapeHtml(t('ui.labelOptional'))}</span>
+        <span class="detail-row-value">${escapeHtml(entry.label)}</span>
+      </div>` : ""}
+      <div class="detail-row">
+        <span class="detail-row-label">${escapeHtml(t('ui.grade'))}</span>
+        <span class="detail-row-value">${entry.upcoming
+          ? `<span class="upcoming-badge">${icon("calendar", 10)} ${escapeHtml(t('ui.entryTypeUpcoming'))}</span>`
+          : `<strong>${formatGrade(entry.value)}</strong> (${escapeHtml(letterOrDescriptor(entry.value))})`}</span>
+      </div>
+      ${(!entry.upcoming && entry.smiley !== null && entry.smiley !== undefined) ? `
+      <div class="detail-row">
+        <span class="detail-row-label">${escapeHtml(t('ui.selfAssessment'))}</span>
+        <span class="detail-row-value">${SMILEY_EMOJI[entry.smiley]} ${escapeHtml(SMILEY_TITLES[entry.smiley]())}</span>
+      </div>` : ""}
+      ${(entry.tags && entry.tags.length) ? `
+      <div class="detail-row">
+        <span class="detail-row-label">${escapeHtml(t('ui.tagsOptional'))}</span>
+        <span class="detail-row-value">${renderTagChips(entry.tags)}</span>
+      </div>` : ""}
+      ${entry.note ? `
+      <div class="detail-row detail-row-note">
+        <span class="detail-row-label">${escapeHtml(t('ui.noteOptional'))}</span>
+        <p class="detail-note-text">${escapeHtml(entry.note)}</p>
+      </div>` : ""}
+    </div>
+    <div class="gt-modal-actions detail-modal-actions">
+      <button type="button" class="icon-btn icon-btn-danger" id="detailDeleteBtn" title="${escapeHtml(t('ui.deleteTestConfirm'))}">${icon("trash", 15)}</button>
+      <div style="flex:1;"></div>
+      ${entry.upcoming ? `<button type="button" class="btn-secondary" id="detailLogResultBtn">${icon("check", 14)} ${escapeHtml(t('ui.convertUpcoming'))}</button>` : ""}
+      <button type="button" class="btn-primary" id="detailEditBtn">${icon("pencil", 14)} ${escapeHtml(t('ui.editTest'))}</button>
+    </div>
+  `;
+}
+
+function renderTestEditForm(subject, entry) {
+  const sc = scaleDef();
+  const hint = state.scale === "finnish" ? t('scaleHint.finnish') : t('scaleHint.hundred');
+  return `
+    <form id="testEditForm" class="add-entry-form">
+      <div class="add-entry-grid">
+        <label class="field">
+          <span>${escapeHtml(t('ui.subject'))}</span>
+          <select id="editEntrySubject">
+            ${state.subjects.map((s) => `<option value="${s.id}" ${s.id === subject.id ? 'selected' : ''}>${escapeHtml(s.name)}</option>`).join("")}
+          </select>
+        </label>
+        <label class="field">
+          <span>${escapeHtml(t('ui.chart'))}</span>
+          <div class="segmented" id="editEntryTypeSeg">
+            <button type="button" data-type="${TYPES.TEST}" class="${entry.type === TYPES.TEST ? 'segmented-active' : ''}">${escapeHtml(t('ui.testLabel'))}</button>
+            <button type="button" data-type="${TYPES.REPORT}" class="${entry.type === TYPES.REPORT ? 'segmented-active' : ''}">${escapeHtml(t('ui.reportLabel'))}</button>
+          </div>
+        </label>
+        <label class="field">
+          <span>${escapeHtml(t('ui.testDate'))}</span>
+          <input type="date" id="editEntryDate" value="${entry.date}" />
+        </label>
+        <label class="field">
+          <span>${escapeHtml(t('ui.grade'))}</span>
+          <input type="text" id="editEntryValue" value="${entry.value !== null && entry.value !== undefined ? formatGrade(entry.value) : ''}" placeholder="${escapeHtml(state.scale === 'finnish' ? t('ui.gradePlaceholderFinnish') : t('ui.gradePlaceholderHundred'))}" />
+        </label>
+        <label class="field field-wide">
+          <span>${escapeHtml(t('ui.labelOptional'))}</span>
+          <input type="text" id="editEntryLabel" value="${escapeHtml(entry.label || '')}" />
+        </label>
+        <div class="field field-wide" id="editEntryTagsField">
+          <span>${escapeHtml(t('ui.tagsOptional'))}</span>
+          ${renderTagPicker("editEntryTags")}
+        </div>
+        <div class="field field-wide">
+          <span>${escapeHtml(t('ui.selfAssessmentOptional'))}</span>
+          <div class="smiley-picker" id="editSmileyPicker">
+            ${SMILEY_EMOJI.map((emoji, i) => `<button type="button" class="smiley-btn ${entry.smiley === i ? 'smiley-selected' : ''}" data-smiley="${i}" title="${escapeHtml(SMILEY_TITLES[i]())}">${emoji}</button>`).join("")}
+          </div>
+        </div>
+        <label class="field field-wide">
+          <span>${escapeHtml(t('ui.noteOptional'))}</span>
+          <textarea id="editEntryNote">${escapeHtml(entry.note || '')}</textarea>
+        </label>
+      </div>
+      <div class="field-hint">${escapeHtml(hint)}</div>
+      <div id="editEntryFormMsg"></div>
+      <div class="gt-modal-actions detail-modal-actions">
+        <button type="button" class="btn-secondary" id="detailCancelEditBtn">${escapeHtml(t('confirm.cancel'))}</button>
+        <div style="flex:1;"></div>
+        <button type="submit" class="btn-primary">${icon("check", 16)} ${escapeHtml(t('ui.saveChanges'))}</button>
+      </div>
+    </form>
+  `;
+}
+
+function wireTestEditForm(subject, entry) {
+  let entryType = entry.type;
+  let selectedSmiley = (entry.smiley !== null && entry.smiley !== undefined) ? entry.smiley : null;
+  const getEditTags = setupTagPicker("editEntryTags", entry.tags || []);
+
+  const seg = document.getElementById("editEntryTypeSeg");
+  seg.querySelectorAll("button").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      entryType = btn.dataset.type;
+      seg.querySelectorAll("button").forEach((b) => b.classList.toggle("segmented-active", b === btn));
+    });
+  });
+
+  const smileyPicker = document.getElementById("editSmileyPicker");
+  smileyPicker.querySelectorAll(".smiley-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const idx = parseInt(btn.dataset.smiley, 10);
+      selectedSmiley = selectedSmiley === idx ? null : idx;
+      smileyPicker.querySelectorAll(".smiley-btn").forEach((b) => b.classList.toggle("smiley-selected", parseInt(b.dataset.smiley, 10) === selectedSmiley));
+    });
+  });
+
+  document.getElementById("detailCancelEditBtn").addEventListener("click", () => renderTestDetailModal(subject, entry, false));
+
+  document.getElementById("testEditForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const newSubjectId = document.getElementById("editEntrySubject").value;
+    const date = document.getElementById("editEntryDate").value;
+    const rawValue = document.getElementById("editEntryValue").value;
+    const label = document.getElementById("editEntryLabel").value.trim();
+    const note = document.getElementById("editEntryNote").value.trim();
+    const tags = entryType === TYPES.TEST ? getEditTags() : [];
+    const msgEl = document.getElementById("editEntryFormMsg");
+    const sc = scaleDef();
+
+    const parsed = parseGradeInput(rawValue);
+    if (parsed === null) {
+      msgEl.innerHTML = `<div class="form-error">${icon("alert", 13)} ${escapeHtml(state.scale === 'finnish' ? t('ui.cannotReadGrade') : t('ui.enterNumericGrade'))}</div>`;
+      return;
+    }
+    if (parsed < sc.min || parsed > sc.max) {
+      msgEl.innerHTML = `<div class="form-error">${icon("alert", 13)} ${escapeHtml(t('ui.gradeRangeError', { min: sc.min, max: sc.max }))}</div>`;
+      return;
+    }
+    if (!date) {
+      msgEl.innerHTML = `<div class="form-error">${icon("alert", 13)} ${escapeHtml(t('ui.pickDate'))}</div>`;
+      return;
+    }
+
+    entry.date = date;
+    entry.value = parsed;
+    entry.type = entryType;
+    entry.label = label;
+    entry.note = note;
+    entry.tags = tags;
+    entry.smiley = selectedSmiley;
+    entry.upcoming = false;
+
+    let targetSubject = subject;
+    if (newSubjectId !== subject.id) {
+      subject.entries = subject.entries.filter((en) => en.id !== entry.id);
+      targetSubject = state.subjects.find((s) => s.id === newSubjectId);
+      targetSubject.entries.push(entry);
+    }
+
+    persist();
+    showToast(`${icon("check", 14)} ${escapeHtml(t('ui.testUpdatedToast'))}`);
+    closeTestDetailModal();
+    render();
+  });
+}
+
 function confirmModal({ title, body, confirmLabel, danger, onConfirm }) {
   const root = document.getElementById("modalRoot");
   root.innerHTML = `
@@ -1408,6 +1829,7 @@ function render() {
   attachHandlers();
   if (state.tab === "charts") renderCharts();
   localizeDom(root);
+  showBackupBannerIfDue();
 }
 
 /* ======================================================================
@@ -1422,7 +1844,7 @@ function renderTestSearchPanel() {
   const isCollapsed = state.testSearchCollapsed && !anyFilterActive;
 
   return `
-    <div class="panel test-search-panel">
+    <div class="panel test-search-panel ${isCollapsed ? '' : 'is-expanded'}">
       <button type="button" class="panel-title test-search-toggle" data-action="toggle-test-search">
         <span>${icon("search", 16)} ${escapeHtml(t('ui.searchTests'))}</span>
         <span class="group-collapse-chevron">${icon(isCollapsed ? "chevronRight" : "chevronDownSm", 16)}</span>
@@ -1440,10 +1862,12 @@ function renderTestSearchPanel() {
             ${state.subjects.map((s) => `<option value="${s.id}" ${f.subjectId === s.id ? 'selected' : ''}>${escapeHtml(s.name)}</option>`).join("")}
           </select>
 
-          <select class="test-filter-select ${f.tag ? 'active-filter' : ''}" id="homeFilterTag">
-            <option value="">${escapeHtml(t('ui.allTags'))}</option>
-            ${tags.map((tg) => `<option value="${escapeHtml(tg)}" ${f.tag === tg ? 'selected' : ''}>${escapeHtml(tg)}</option>`).join("")}
-          </select>
+          <div class="tag-filter-anchor">
+            <button type="button" class="test-filter-select tag-filter-btn ${f.tag ? 'active-filter' : ''}" id="homeFilterTagBtn">
+              <span>${f.tag ? escapeHtml(f.tag) : escapeHtml(t('ui.allTags'))}</span>
+              ${icon("chevronDownSm", 13)}
+            </button>
+          </div>
 
           <select class="test-filter-select ${(f.smiley !== null && f.smiley !== undefined) ? 'active-filter' : ''}" id="homeFilterSmiley">
             <option value="">${escapeHtml(t('ui.allFeelings'))}</option>
@@ -1476,7 +1900,7 @@ function renderTestSearchPanel() {
                 else countdown = t('ui.daysAway', { days });
               }
               return `
-              <div class="home-test-row ${e.upcoming ? 'is-upcoming' : ''}">
+              <div class="home-test-row ${e.upcoming ? 'is-upcoming' : ''}" data-action="open-test-detail" data-subject="${e.subjectId}" data-entry="${e.id}">
                 <span class="home-test-row-date">${fmtDate(e.date)}</span>
                 <span class="home-test-row-subject"><span class="subject-dot-sm" style="background:${e.subjectColor}"></span>${escapeHtml(e.subjectName)}</span>
                 <span class="home-test-row-label">${escapeHtml(e.label || "—")}</span>
@@ -1604,7 +2028,12 @@ function renderDashboardSubjects() {
 function renderChartPanel(type, title, iconName) {
   return `
     <div class="chart-panel">
-      <div class="chart-panel-header">${icon(iconName, 18)}<h3>${escapeHtml(title)}</h3></div>
+      <div class="chart-panel-header">
+        ${icon(iconName, 18)}<h3>${escapeHtml(title)}</h3>
+        <button type="button" class="chart-save-image-btn" data-action="save-chart-image" data-type="${type}" title="${escapeHtml(t('ui.saveChartImage'))}">
+          ${icon("download", 14)}
+        </button>
+      </div>
       <div class="chart-canvas-wrap" id="chartWrap-${type}">
         <canvas id="chart-${type}"></canvas>
       </div>
@@ -1673,8 +2102,9 @@ function renderOneChart(type) {
     if (typeof Chart === "undefined") {
       const scriptId = "gt-chartjs";
       const CDNS = [
-        "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js",
         "https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js",
+        "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js",
+        "https://unpkg.com/chart.js@4.4.4/dist/chart.umd.min.js",
       ];
       if (!document.querySelector(`[data-gt-loader="${scriptId}"]`)) {
         let attempt = 0;
@@ -1697,7 +2127,7 @@ function renderOneChart(type) {
             }
           };
           s.onerror = () => {
-            console.warn("Failed loading Chart.js from", s.src);
+            console.info("Chart.js CDN unavailable, trying next:", s.src);
             s.remove();
             tryLoad();
           };
@@ -1799,7 +2229,7 @@ function renderOneChart(type) {
         datasets.push({
           label: t('ui.allSubjects'),
           data: dates.map(() => overallAvg),
-          borderColor: "#1B2A41",
+          borderColor: themeColor('--ink'),
           borderDash: [7, 3],
           borderWidth: 2,
           pointRadius: 0,
@@ -1846,14 +2276,14 @@ function renderOneChart(type) {
         interaction: { mode: "nearest", intersect: false },
         scales: {
           x: {
-            ticks: { font: { family: "monospace", size: 11 }, color: "#8C95A6", callback: safeTickCallback },
-            grid: { color: "#E8E1D2", drawTicks: false },
-            border: { color: "#D8CFB8" },
+            ticks: { font: { family: "monospace", size: 11 }, color: themeColor('--ink-faint'), callback: safeTickCallback },
+            grid: { color: themeColor('--rule'), drawTicks: false },
+            border: { color: themeColor('--rule-strong') },
           },
           y: {
             min: sc.min, max: sc.max,
-            ticks: { font: { family: "monospace", size: 11 }, color: "#8C95A6" },
-            grid: { color: "#E8E1D2" },
+            ticks: { font: { family: "monospace", size: 11 }, color: themeColor('--ink-faint') },
+            grid: { color: themeColor('--rule') },
             border: { display: false },
           },
         },
@@ -1865,12 +2295,14 @@ function renderOneChart(type) {
                 return !ds || !ds.isReference;
               },
               font: { family: "monospace", size: 12 },
-              color: "#44546B",
+              color: themeColor('--ink-soft'),
             },
           },
           tooltip: {
             filter: (item) => !item.dataset.isReference,
-            backgroundColor: "#1B2A41",
+            backgroundColor: themeColor('--overlay-bg'),
+            titleColor: themeColor('--overlay-text'),
+            bodyColor: themeColor('--overlay-text'),
             titleFont: { family: "monospace", size: 11 },
             bodyFont: { size: 12 },
             padding: 10,
@@ -1936,10 +2368,10 @@ function renderUpcomingPanel() {
           <span>${escapeHtml(t('ui.labelOptional'))}</span>
           <input type="text" id="upcomingLabel" placeholder="e.g. Chapter 5 test" />
         </label>
-        <label class="field field-wide">
+        <div class="field field-wide">
           <span>${escapeHtml(t('ui.tagsOptional'))}</span>
-          <input type="text" id="upcomingTags" placeholder="${escapeHtml(t('ui.tagsPlaceholder'))}" autocomplete="off" />
-        </label>
+          ${renderTagPicker("upcomingTags")}
+        </div>
       </div>
       <button type="submit" class="btn-secondary" style="align-self:flex-start;">${icon("calendar", 14)} ${escapeHtml(t('ui.addUpcomingBtn'))}</button>
     </form>
@@ -1957,11 +2389,11 @@ function renderUpcomingPanel() {
             <span class="upcoming-row-date">${fmtDate(e.date)}</span>
             <span class="upcoming-row-subject"><span class="subject-dot-sm" style="background:${e.subjectColor}"></span>${escapeHtml(e.subjectName)}</span>
             <span class="upcoming-row-label">${escapeHtml(e.label || "—")}</span>
-            ${renderTagChips(e.tags)}
+            ${renderTagChips(e.tags, { removable: true, subjectId: e.subjectId, entryId: e.id })}
             <span class="countdown-chip">${escapeHtml(chip)}</span>
             <span class="upcoming-row-actions">
               <button type="button" class="log-result-btn" data-action="open-quick-log" data-subject="${e.subjectId}" data-entry="${e.id}">${icon("check", 12)} ${escapeHtml(t('ui.convertUpcoming'))}</button>
-              <button type="button" class="icon-btn icon-btn-danger" data-action="delete-entry" data-subject="${e.subjectId}" data-entry="${e.id}" title="${escapeHtml(t('ui.deleteConfirm'))}">${icon("x", 13)}</button>
+              <button type="button" class="icon-btn icon-btn-danger" data-action="delete-entry" data-subject="${e.subjectId}" data-entry="${e.id}" title="${escapeHtml(t('ui.deleteTestConfirm'))}">${icon("x", 13)}</button>
             </span>
           </div>`;
         }).join("")}
@@ -1991,7 +2423,7 @@ function renderGroupManageRow(group, depth) {
           <span style="color:${group.color}">${icon("palette", 14)}</span>
         </button>
       </div>
-      <button class="icon-btn icon-btn-danger" data-action="delete-group" data-id="${group.id}" title="${escapeHtml(t('ui.deleteConfirm'))}">${icon("trash", 14)}</button>
+      <button class="icon-btn icon-btn-danger" data-action="delete-group" data-id="${group.id}" title="${escapeHtml(t('ui.deleteGroupConfirm'))}">${icon("trash", 14)}</button>
     </div>
   `;
 }
@@ -2107,10 +2539,10 @@ function renderAddEntryForm() {
           <span>${escapeHtml(t('ui.labelOptional'))}</span>
           <input type="text" id="entryLabel" placeholder="${escapeHtml(t('ui.labelOptional'))}" />
         </label>
-        <label class="field field-wide" id="entryTagsField">
+        <div class="field field-wide" id="entryTagsField">
           <span>${escapeHtml(t('ui.tagsOptional'))}</span>
-          <input type="text" id="entryTags" placeholder="${escapeHtml(t('ui.tagsPlaceholder'))}" autocomplete="off" />
-        </label>
+          ${renderTagPicker("entryTags")}
+        </div>
         <div class="field field-wide">
           <span>${escapeHtml(t('ui.selfAssessmentOptional'))}</span>
           <div class="smiley-picker" id="smileyPicker">
@@ -2158,7 +2590,7 @@ function renderSubjectRow(s) {
             <span style="color:${s.color}">${icon("palette", 15)}</span>
           </button>
         </div>
-        <button class="icon-btn icon-btn-danger" data-action="delete-subject" data-id="${s.id}" title="${escapeHtml(t('ui.deleteConfirm'))}">${icon("trash", 15)}</button>
+        <button class="icon-btn icon-btn-danger" data-action="delete-subject" data-id="${s.id}" title="${escapeHtml(t('ui.deleteSubjectConfirm'))}">${icon("trash", 15)}</button>
       </div>
     </div>
   `;
@@ -2206,7 +2638,118 @@ const SMILEY_TITLES = [
 function renderTagChips(tags, opts) {
   opts = opts || {};
   if (!tags || !tags.length) return "";
-  return `<span class="tag-chip-row">${tags.map((tg) => `<span class="tag-chip" ${opts.clickable ? `data-action="filter-tag-chip" data-tag="${escapeHtml(tg)}"` : ""}>${icon("tag", 9)}${escapeHtml(tg)}</span>`).join("")}</span>`;
+  return `<span class="tag-chip-row">${tags.map((tg) => {
+    if (opts.removable) {
+      return `<span class="tag-chip tag-chip-removable-static">
+        ${icon("tag", 9)}${escapeHtml(tg)}
+        <button type="button" class="tag-chip-remove" data-action="remove-entry-tag" data-subject="${opts.subjectId}" data-entry="${opts.entryId}" data-tag="${escapeHtml(tg)}" title="${escapeHtml(t('ui.removeTag'))}">${icon("x", 9)}</button>
+      </span>`;
+    }
+    return `<span class="tag-chip" ${opts.clickable ? `data-action="filter-tag-chip" data-tag="${escapeHtml(tg)}"` : ""}>${icon("tag", 9)}${escapeHtml(tg)}</span>`;
+  }).join("")}</span>`;
+}
+
+// Renders a tag-picker widget: selected tags as removable chips, plus a text input that
+// opens a dropdown of existing tags (filtered as you type) with a "Create tag" option
+// when there's no exact match. idPrefix namespaces the DOM ids so multiple pickers can
+// coexist on the same page (e.g. the log-grade form and the schedule-test form).
+function renderTagPicker(idPrefix) {
+  return `
+    <div class="tag-picker" id="${idPrefix}Picker" data-tags="[]">
+      <div class="tag-picker-chips" id="${idPrefix}Chips"></div>
+      <div class="tag-picker-input-wrap">
+        <input type="text" id="${idPrefix}Search" class="tag-picker-input" placeholder="${escapeHtml(t('ui.tagsSearchPlaceholder'))}" autocomplete="off" />
+        <div class="tag-picker-dropdown" id="${idPrefix}Dropdown" hidden></div>
+      </div>
+    </div>
+  `;
+}
+
+// Wires up interactivity for a tag-picker rendered by renderTagPicker(idPrefix).
+// Returns a getTags() function the caller can use at form-submit time.
+function setupTagPicker(idPrefix, initialTags) {
+  const picker = document.getElementById(`${idPrefix}Picker`);
+  if (!picker) return () => [];
+  const chipsEl = document.getElementById(`${idPrefix}Chips`);
+  const searchEl = document.getElementById(`${idPrefix}Search`);
+  const dropdownEl = document.getElementById(`${idPrefix}Dropdown`);
+  let selected = Array.isArray(initialTags) ? [...initialTags] : [];
+
+  function renderChips() {
+    chipsEl.innerHTML = selected.map((tg) => `
+      <span class="tag-chip tag-chip-removable">
+        ${icon("tag", 9)}${escapeHtml(tg)}
+        <button type="button" class="tag-chip-remove" data-tag="${escapeHtml(tg)}">${icon("x", 10)}</button>
+      </span>
+    `).join("");
+    chipsEl.querySelectorAll(".tag-chip-remove").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        selected = selected.filter((t) => t !== btn.dataset.tag);
+        renderChips();
+      });
+    });
+  }
+
+  function closeDropdown() {
+    dropdownEl.hidden = true;
+    dropdownEl.innerHTML = "";
+  }
+
+  function addTag(raw) {
+    const cleaned = raw.trim().toLowerCase();
+    if (!cleaned) return;
+    if (!selected.includes(cleaned) && selected.length < 8) selected.push(cleaned);
+    searchEl.value = "";
+    renderChips();
+    searchEl.focus();
+    openDropdown(); // keep it open, refreshed with remaining tags, so multi-select doesn't require re-opening each time
+  }
+
+  function openDropdown() {
+    const query = searchEl.value.trim().toLowerCase();
+    const existing = allTagsInUse().filter((tg) => !selected.includes(tg));
+    const matches = query ? existing.filter((tg) => tg.includes(query)) : existing;
+    const exactMatch = existing.some((tg) => tg === query) || selected.includes(query);
+
+    let html = "";
+    if (matches.length) {
+      html += matches.slice(0, 8).map((tg) => `<button type="button" class="tag-picker-option" data-tag="${escapeHtml(tg)}">${icon("tag", 11)} ${escapeHtml(tg)}</button>`).join("");
+    }
+    if (query && !exactMatch) {
+      html += `<button type="button" class="tag-picker-option tag-picker-create" data-tag="${escapeHtml(query)}">${icon("plus", 11)} ${escapeHtml(t('ui.createTagBtn', { tag: query }))}</button>`;
+    }
+    if (!html) {
+      html = `<div class="tag-picker-empty">${escapeHtml(t('ui.noTagsYet'))}</div>`;
+    }
+    dropdownEl.innerHTML = html;
+    dropdownEl.hidden = false;
+    dropdownEl.querySelectorAll(".tag-picker-option").forEach((opt) => {
+      opt.addEventListener("mousedown", (e) => {
+        e.preventDefault(); // keep focus on input, prevent blur from closing dropdown first
+        addTag(opt.dataset.tag);
+      });
+    });
+  }
+
+  searchEl.addEventListener("focus", openDropdown);
+  searchEl.addEventListener("input", openDropdown);
+  searchEl.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      if (searchEl.value.trim()) addTag(searchEl.value);
+    } else if (e.key === "Backspace" && !searchEl.value && selected.length) {
+      selected.pop();
+      renderChips();
+    } else if (e.key === "Escape") {
+      closeDropdown();
+    }
+  });
+  searchEl.addEventListener("blur", () => {
+    setTimeout(closeDropdown, 120);
+  });
+
+  renderChips();
+  return () => selected;
 }
 
 function renderEntryList(s, filter) {
@@ -2216,16 +2759,16 @@ function renderEntryList(s, filter) {
   return `
     <ul class="entry-list">
       ${filtered.map((e) => `
-        <li class="entry-row">
+        <li class="entry-row" data-action="open-test-detail" data-subject="${s.id}" data-entry="${e.id}">
           <span class="entry-date">${fmtDate(e.date)}</span>
           <span class="entry-type entry-type-${e.type}">${e.type === TYPES.TEST ? escapeHtml(t('ui.testLabel')) : escapeHtml(t('ui.reportLabel'))}</span>
           <span class="entry-label">${escapeHtml(e.label || "—")}</span>
           <span class="entry-value">${e.upcoming
             ? `<span class="upcoming-badge">${icon("calendar", 10)} ${escapeHtml(t('ui.entryTypeUpcoming'))}</span>`
             : `${formatGrade(e.value)}${(e.smiley !== null && e.smiley !== undefined) ? `<span class="entry-smiley">${SMILEY_EMOJI[e.smiley]}</span>` : ""}`}</span>
-          <button class="icon-btn icon-btn-danger" data-action="delete-entry" data-subject="${s.id}" data-entry="${e.id}" title="${escapeHtml(t('ui.deleteConfirm'))}">${icon("x", 13)}</button>
+          <button class="icon-btn icon-btn-danger" data-action="delete-entry" data-subject="${s.id}" data-entry="${e.id}" title="${escapeHtml(t('ui.deleteTestConfirm'))}">${icon("x", 13)}</button>
         </li>
-        ${(e.tags && e.tags.length) ? `<li class="entry-row-note">${renderTagChips(e.tags)}</li>` : ""}
+        ${(e.tags && e.tags.length) ? `<li class="entry-row-note">${renderTagChips(e.tags, { removable: true, subjectId: s.id, entryId: e.id })}</li>` : ""}
         ${e.upcoming ? `<li class="entry-row-note"><button type="button" class="btn-ghost" data-action="convert-upcoming" data-subject="${s.id}" data-entry="${e.id}" style="padding:2px 8px; font-size:11px;">${icon("check", 11)} ${escapeHtml(t('ui.convertUpcoming'))}</button></li>` : ""}
         ${e.note ? `<li class="entry-row-note">${icon("note", 11)} ${escapeHtml(e.note)}</li>` : ""}
       `).join("")}
@@ -2258,6 +2801,17 @@ function renderSettingsTab() {
     </section>
 
     <section class="panel">
+      <h2 class="panel-title">${escapeHtml(t('ui.appearance'))}</h2>
+      <div class="settings-row">
+        <div>
+          <div class="settings-row-label">${escapeHtml(t('ui.darkMode'))}</div>
+          <div class="settings-row-desc">${escapeHtml(t('ui.darkModeDesc'))}</div>
+        </div>
+        <label class="gt-toggle"><input type="checkbox" id="settingsToggleDarkMode" ${state.theme === 'dark' ? "checked" : ""}/></label>
+      </div>
+    </section>
+
+    <section class="panel">
       <h2 class="panel-title">${escapeHtml(t('ui.toggleAverages'))}</h2>
       <div class="settings-row">
         <div class="settings-row-label">${escapeHtml(t('ui.toggleAverages'))}</div>
@@ -2283,6 +2837,7 @@ function renderSettingsTab() {
       <div class="import-export-row">
         <button class="btn-secondary" id="exportJsonBtn">${icon("download", 14)} ${escapeHtml(t('ui.exportJson'))}</button>
         <button class="btn-secondary" id="exportCsvBtn">${icon("download", 14)} ${escapeHtml(t('ui.exportCsv'))}</button>
+        <button class="btn-secondary" id="exportTextBtn">${icon("download", 14)} ${escapeHtml(t('ui.exportText'))}</button>
         <button class="btn-secondary" id="importBtn">${icon("upload", 14)} ${escapeHtml(t('ui.importJson'))}</button>
         <input type="file" id="importFile" accept="application/json" />
       </div>
@@ -2299,6 +2854,140 @@ function renderSettingsTab() {
 /* ======================================================================
    EXPORT / IMPORT
 ====================================================================== */
+function markBackedUp() {
+  const now = new Date().toISOString();
+  state.lastBackupAt = now;
+  state.backupBannerDismissedAt = null;
+  try {
+    localStorage.setItem(STORAGE_KEY + ':lastBackupAt', now);
+    localStorage.removeItem(STORAGE_KEY + ':backupBannerDismissedAt');
+  } catch (e) {}
+  hideBackupBanner();
+}
+
+const BACKUP_REMINDER_MS = 14 * 24 * 60 * 60 * 1000; // 2 weeks
+
+function shouldShowBackupBanner() {
+  if (!state.subjects.length) return false; // nothing to back up yet
+  const now = Date.now();
+  if (state.backupBannerDismissedAt) {
+    const dismissedAt = new Date(state.backupBannerDismissedAt).getTime();
+    if (now - dismissedAt < BACKUP_REMINDER_MS) return false; // snoozed, not due again yet
+  }
+  if (!state.lastBackupAt) return true; // never backed up at all
+  const lastBackup = new Date(state.lastBackupAt).getTime();
+  return now - lastBackup >= BACKUP_REMINDER_MS;
+}
+
+function hideBackupBanner() {
+  const el = document.getElementById("backupBanner");
+  if (el) el.remove();
+  document.body.classList.remove("has-backup-banner");
+}
+
+function showBackupBannerIfDue() {
+  if (!shouldShowBackupBanner()) return;
+  if (document.getElementById("backupBanner")) return;
+  document.body.classList.add("has-backup-banner");
+  const banner = document.createElement("div");
+  banner.id = "backupBanner";
+  banner.className = "backup-banner";
+  banner.innerHTML = `
+    ${icon("alert", 16)}
+    <span class="backup-banner-text">${escapeHtml(t('ui.backupBannerText'))}</span>
+    <button type="button" class="backup-banner-action" id="backupBannerExport">${icon("download", 13)} ${escapeHtml(t('ui.backupBannerAction'))}</button>
+    <button type="button" class="backup-banner-dismiss" id="backupBannerDismiss" title="${escapeHtml(t('ui.backupBannerDismiss'))}">${icon("x", 14)}</button>
+  `;
+  document.body.appendChild(banner);
+  document.getElementById("backupBannerExport").addEventListener("click", () => {
+    exportJson();
+  });
+  document.getElementById("backupBannerDismiss").addEventListener("click", () => {
+    const now = new Date().toISOString();
+    state.backupBannerDismissedAt = now;
+    try { localStorage.setItem(STORAGE_KEY + ':backupBannerDismissedAt', now); } catch (e) {}
+    hideBackupBanner();
+  });
+}
+
+function exportTextFile() {
+  const lines = [];
+  const title = t('ui.textExportTitle');
+  lines.push(title);
+  lines.push("=".repeat(title.length));
+  lines.push("");
+  lines.push(`${t('ui.textExportGeneratedOn')}: ${new Date().toLocaleString()}`);
+  lines.push("");
+
+  const overall = overallAverage();
+  if (overall !== null) {
+    lines.push(`${t('ui.overallAverage')}: ${formatGrade(overall)} (${letterOrDescriptor(overall)})`);
+    lines.push("");
+  }
+
+  function writeSubject(s, indent) {
+    const pad = "  ".repeat(indent);
+    const avg = average(graded(s.entries));
+    lines.push(`${pad}${s.name} — ${t('ui.overallAverage').toLowerCase()}: ${formatGrade(avg)} (${letterOrDescriptor(avg)})`);
+    if (s.goal !== null && s.goal !== undefined) lines.push(`${pad}  ${t('ui.goalLabel')}: ${formatGrade(s.goal)}`);
+    const sorted = [...s.entries].sort((a, b) => a.date.localeCompare(b.date));
+    sorted.forEach((e) => {
+      const typeLabel = e.type === TYPES.TEST ? t('ui.testLabel') : t('ui.reportLabel');
+      const valuePart = e.upcoming ? `[${t('ui.entryTypeUpcoming')}]` : formatGrade(e.value);
+      const labelPart = e.label ? ` — ${e.label}` : "";
+      const tagsPart = (e.tags && e.tags.length) ? ` #${e.tags.join(" #")}` : "";
+      lines.push(`${pad}  ${fmtDate(e.date)}  [${typeLabel}]  ${valuePart}${labelPart}${tagsPart}`);
+      if (e.note) lines.push(`${pad}      "${e.note}"`);
+    });
+    lines.push("");
+  }
+
+  function writeGroup(group, indent) {
+    const pad = "  ".repeat(indent);
+    const avg = groupAverage(group.id);
+    lines.push(`${pad}### ${group.name} — ${t('ui.overallAverage').toLowerCase()}: ${formatGrade(avg)} (${letterOrDescriptor(avg)})`);
+    lines.push("");
+    childGroups(group.id).forEach((g) => writeGroup(g, indent + 1));
+    directSubjectsOf(group.id).forEach((s) => writeSubject(s, indent + 1));
+  }
+
+  childGroups(null).forEach((g) => writeGroup(g, 0));
+  directSubjectsOf(null).forEach((s) => writeSubject(s, 0));
+
+  downloadFile(`gradebook-${todayISO()}.txt`, lines.join("\n"), "text/plain");
+  showToast(`${icon("check", 14)} ${escapeHtml(t('ui.exportSuccessText'))}`);
+  markBackedUp();
+}
+
+function exportChartImage(type) {
+  const chart = charts[type];
+  if (!chart) {
+    showToast(`${icon("alert", 14)} ${escapeHtml(t('ui.noChartToExport'))}`);
+    return;
+  }
+  // Chart.js canvases have a transparent background; composite onto a solid
+  // paper-colored canvas first so the exported PNG stays legible (dark-theme
+  // text isn't readable against a transparent-turned-white background) and
+  // looks intentional whether viewed on screen or printed.
+  const sourceCanvas = chart.canvas;
+  const exportCanvas = document.createElement("canvas");
+  exportCanvas.width = sourceCanvas.width;
+  exportCanvas.height = sourceCanvas.height;
+  const ctx = exportCanvas.getContext("2d");
+  ctx.fillStyle = themeColor('--paper-raised') || "#FFFFFF";
+  ctx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
+  ctx.drawImage(sourceCanvas, 0, 0);
+
+  const url = exportCanvas.toDataURL("image/png", 1.0);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `gradebook-chart-${type}-${todayISO()}.png`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  showToast(`${icon("check", 14)} ${escapeHtml(t('ui.exportSuccessImage'))}`);
+}
+
 function exportJson() {
   const payload = {
     version: 3,
@@ -2309,6 +2998,7 @@ function exportJson() {
   };
   downloadFile(`gradebook-export-${todayISO()}.json`, JSON.stringify(payload, null, 2), "application/json");
   showToast(`${icon("check", 14)} ${escapeHtml(t('ui.exportSuccessJson'))}`);
+  markBackedUp();
 }
 
 function exportCsv() {
@@ -2432,7 +3122,7 @@ function renderHomeResultsOnly() {
           else countdown = t('ui.daysAway', { days });
         }
         return `
-        <div class="home-test-row ${e.upcoming ? 'is-upcoming' : ''}">
+        <div class="home-test-row ${e.upcoming ? 'is-upcoming' : ''}" data-action="open-test-detail" data-subject="${e.subjectId}" data-entry="${e.id}">
           <span class="home-test-row-date">${fmtDate(e.date)}</span>
           <span class="home-test-row-subject"><span class="subject-dot-sm" style="background:${e.subjectColor}"></span>${escapeHtml(e.subjectName)}</span>
           <span class="home-test-row-label">${escapeHtml(e.label || "—")}</span>
@@ -2480,6 +3170,13 @@ function renderHomeResultsOnly() {
       render();
     });
   });
+
+  root.querySelectorAll('[data-action="open-test-detail"]').forEach((row) => {
+    row.addEventListener("click", (e) => {
+      if (e.target.closest('button, a, input, select, textarea, [data-action="filter-tag-chip"]')) return;
+      openTestDetailModal(row.dataset.subject, row.dataset.entry);
+    });
+  });
 }
 
 function attachHandlers() {
@@ -2520,8 +3217,84 @@ function attachHandlers() {
   }
   const homeFilterSubject = document.getElementById("homeFilterSubject");
   if (homeFilterSubject) homeFilterSubject.addEventListener("change", (e) => { state.testFilters.subjectId = e.target.value || null; render(); });
-  const homeFilterTag = document.getElementById("homeFilterTag");
-  if (homeFilterTag) homeFilterTag.addEventListener("change", (e) => { state.testFilters.tag = e.target.value || null; render(); });
+
+  const homeFilterTagBtn = document.getElementById("homeFilterTagBtn");
+  if (homeFilterTagBtn) {
+    homeFilterTagBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const existing = document.querySelector(".tag-filter-dropdown");
+      if (existing) { existing.remove(); return; }
+      document.querySelectorAll(".group-select-menu, .color-picker, .tag-filter-dropdown").forEach((p) => p.remove());
+
+      const menu = document.createElement("div");
+      menu.className = "tag-filter-dropdown";
+      const renderTagOptions = () => {
+        const tags = allTagsInUse();
+        const allOption = `<button type="button" class="group-select-option ${!state.testFilters.tag ? 'selected' : ''}" data-tag-select="">${icon("x", 13)} ${escapeHtml(t('ui.allTags'))}</button>`;
+        if (!tags.length) {
+          return allOption + `<div class="tag-picker-empty">${escapeHtml(t('ui.noTagsYet'))}</div>`;
+        }
+        return allOption + `<div class="group-select-divider"></div>` + tags.map((tg) => `
+          <div class="tag-filter-option-row">
+            <button type="button" class="group-select-option tag-filter-option ${state.testFilters.tag === tg ? 'selected' : ''}" data-tag-select="${escapeHtml(tg)}">
+              ${icon("tag", 12)} ${escapeHtml(tg)}
+            </button>
+            <button type="button" class="tag-filter-delete-btn" data-tag-delete="${escapeHtml(tg)}" title="${escapeHtml(t('ui.deleteTagEverywhere'))}">${icon("x", 12)}</button>
+          </div>
+        `).join("");
+      };
+
+      const wireTagOptions = () => {
+        menu.querySelectorAll('[data-tag-select]').forEach((opt) => {
+          opt.addEventListener("click", () => {
+            state.testFilters.tag = opt.dataset.tagSelect || null;
+            menu.remove();
+            render();
+          });
+        });
+        menu.querySelectorAll('[data-tag-delete]').forEach((delBtn) => {
+          delBtn.addEventListener("click", (ev) => {
+            ev.stopPropagation();
+            const tagToDelete = delBtn.dataset.tagDelete;
+            confirmModal({
+              title: t('ui.deleteTagConfirmTitle', { tag: tagToDelete }),
+              body: t('ui.deleteTagConfirmBody'),
+              confirmLabel: t('ui.deleteTagConfirm'),
+              danger: true,
+              onConfirm: () => {
+                state.subjects.forEach((s) => {
+                  s.entries.forEach((e) => {
+                    if (e.tags && e.tags.includes(tagToDelete)) {
+                      e.tags = e.tags.filter((tg) => tg !== tagToDelete);
+                    }
+                  });
+                });
+                if (state.testFilters.tag === tagToDelete) state.testFilters.tag = null;
+                persist();
+                showToast(`${icon("check", 14)} ${escapeHtml(t('ui.tagDeletedToast', { tag: tagToDelete }))}`);
+                menu.remove();
+                render();
+              },
+            });
+          });
+        });
+      };
+
+      menu.innerHTML = renderTagOptions();
+      homeFilterTagBtn.parentElement.appendChild(menu);
+      wireTagOptions();
+
+      const closeHandler = (ev) => {
+        if (!menu.contains(ev.target) && ev.target !== homeFilterTagBtn) {
+          menu.remove();
+          document.removeEventListener("click", closeHandler);
+        }
+      };
+      setTimeout(() => document.addEventListener("click", closeHandler), 0);
+    });
+  }
+
+  // homeFilterTag native select removed; see homeFilterTagBtn custom dropdown handler above
   const homeFilterSmiley = document.getElementById("homeFilterSmiley");
   if (homeFilterSmiley) homeFilterSmiley.addEventListener("change", (e) => { state.testFilters.smiley = e.target.value === "" ? null : parseInt(e.target.value, 10); render(); });
   const homeFilterDateFrom = document.getElementById("homeFilterDateFrom");
@@ -2779,6 +3552,15 @@ function attachHandlers() {
   if (sOverall) sOverall.addEventListener("change", (e) => { state.showOverallAverage = e.target.checked; persist(); });
   const sTrend = document.getElementById("settingsToggleTrend");
   if (sTrend) sTrend.addEventListener("change", (e) => { state.showTrend = e.target.checked; persist(); });
+  const sDark = document.getElementById("settingsToggleDarkMode");
+  if (sDark) sDark.addEventListener("change", (e) => {
+    state.theme = e.target.checked ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", state.theme);
+    try { localStorage.setItem(STORAGE_KEY + ':theme', state.theme); } catch (err) {}
+    const themeToggleIcon = document.getElementById("themeToggleIcon");
+    if (themeToggleIcon) themeToggleIcon.innerHTML = icon(state.theme === "dark" ? "sun" : "moon", 16);
+    if (state.tab === "charts") renderCharts();
+  });
 
   const scaleToggle = document.getElementById("scaleToggle");
   if (scaleToggle) {
@@ -2800,6 +3582,12 @@ function attachHandlers() {
   if (exportJsonBtn) exportJsonBtn.addEventListener("click", exportJson);
   const exportCsvBtn = document.getElementById("exportCsvBtn");
   if (exportCsvBtn) exportCsvBtn.addEventListener("click", exportCsv);
+  const exportTextBtn = document.getElementById("exportTextBtn");
+  if (exportTextBtn) exportTextBtn.addEventListener("click", exportTextFile);
+
+  root.querySelectorAll('[data-action="save-chart-image"]').forEach((btn) => {
+    btn.addEventListener("click", () => exportChartImage(btn.dataset.type));
+  });
   const importBtn = document.getElementById("importBtn");
   const importFile = document.getElementById("importFile");
   if (importBtn && importFile) {
@@ -2836,6 +3624,7 @@ function attachHandlers() {
     let selectedSmiley = null;
     const seg = document.getElementById("entryTypeSeg");
     const tagsField = document.getElementById("entryTagsField");
+    const getEntryTags = setupTagPicker("entryTags", []);
     seg.querySelectorAll("button").forEach((btn) => {
       btn.addEventListener("click", () => {
         entryType = btn.dataset.type;
@@ -2862,8 +3651,7 @@ function attachHandlers() {
       const rawValue = document.getElementById("entryValue").value;
       const label = document.getElementById("entryLabel").value.trim();
       const note = document.getElementById("entryNote").value.trim();
-      const tagsInput = document.getElementById("entryTags");
-      const tags = entryType === TYPES.TEST && tagsInput ? parseTags(tagsInput.value) : [];
+      const tags = entryType === TYPES.TEST ? getEntryTags() : [];
       const msgEl = document.getElementById("entryFormMsg");
 
       const parsed = parseGradeInput(rawValue);
@@ -2900,13 +3688,13 @@ function attachHandlers() {
 
   const addUpcomingForm = document.getElementById("addUpcomingForm");
   if (addUpcomingForm) {
+    const getUpcomingTags = setupTagPicker("upcomingTags", []);
     addUpcomingForm.addEventListener("submit", (e) => {
       e.preventDefault();
       const subjectId = document.getElementById("upcomingSubject").value;
       const date = document.getElementById("upcomingDate").value;
       const label = document.getElementById("upcomingLabel").value.trim();
-      const tagsInput = document.getElementById("upcomingTags");
-      const tags = tagsInput ? parseTags(tagsInput.value) : [];
+      const tags = getUpcomingTags();
       if (!subjectId || !date) return;
       const subject = state.subjects.find((s) => s.id === subjectId);
       subject.entries.push({ id: uid(), date, value: null, type: TYPES.TEST, label, note: "", smiley: null, upcoming: true, tags });
@@ -3014,7 +3802,7 @@ function attachHandlers() {
       confirmModal({
         title: t('ui.groupDeleteConfirmTitle'),
         body: childCount ? t('ui.groupDeleteConfirmBodyWithChildren', { count: childCount }) : t('ui.groupDeleteConfirmBody'),
-        confirmLabel: t('ui.deleteConfirm'),
+        confirmLabel: t('ui.deleteGroupConfirm'),
         danger: true,
         onConfirm: () => {
           // promote direct subjects and child groups up to the deleted group's own parent
@@ -3088,16 +3876,24 @@ function attachHandlers() {
       const subject = state.subjects.find((s) => s.id === id);
       const menu = document.createElement("div");
       menu.className = "group-select-menu";
+      const renderGroupOptionTree = (parentId, depth) => {
+        return childGroups(parentId).map((g) => {
+          const indent = depth * 16;
+          const optionHtml = `
+            <button type="button" class="group-select-option ${subject.groupId === g.id ? 'selected' : ''}" data-group-id="${g.id}" style="padding-left:${10 + indent}px;">
+              ${depth > 0 ? `<span class="group-select-nest-indicator">${icon("chevronRight", 11)}</span>` : ""}
+              <span class="subject-dot-sm" style="background:${g.color}"></span> ${escapeHtml(g.name)}
+            </button>`;
+          return optionHtml + renderGroupOptionTree(g.id, depth + 1);
+        }).join("");
+      };
+
       const renderMenuOptions = () => `
         <button type="button" class="group-select-option ${!subject.groupId ? 'selected' : ''}" data-group-id="">
           ${icon("x", 13)} ${escapeHtml(t('ui.noGroup'))}
         </button>
         ${state.groups.length ? `<div class="group-select-divider"></div>` : ""}
-        ${state.groups.map((g) => `
-          <button type="button" class="group-select-option ${subject.groupId === g.id ? 'selected' : ''}" data-group-id="${g.id}">
-            <span class="subject-dot-sm" style="background:${g.color}"></span> ${escapeHtml(g.name)}
-          </button>
-        `).join("")}
+        ${renderGroupOptionTree(null, 0)}
         <div class="group-select-divider"></div>
         <div class="group-select-new">
           <input type="text" placeholder="${escapeHtml(t('ui.newGroupPlaceholder'))}" />
@@ -3187,7 +3983,7 @@ function attachHandlers() {
       confirmModal({
         title: t('ui.deleteSubjectTitle', { name: subject.name }),
         body: t('ui.deleteSubjectBody', { count: subject.entries.length }),
-        confirmLabel: t('ui.deleteConfirm'),
+        confirmLabel: t('ui.deleteSubjectConfirm'),
         danger: true,
         onConfirm: () => {
           state.subjects = state.subjects.filter((s) => s.id !== id);
@@ -3226,12 +4022,30 @@ function attachHandlers() {
 }
 
 function attachEntryDeleteHandlers(scope) {
+  scope.querySelectorAll('[data-action="open-test-detail"]').forEach((row) => {
+    row.addEventListener("click", (e) => {
+      if (e.target.closest('button, a, input, select, textarea, [data-action="filter-tag-chip"]')) return;
+      openTestDetailModal(row.dataset.subject, row.dataset.entry);
+    });
+  });
+
   scope.querySelectorAll('[data-action="delete-entry"]').forEach((btn) => {
     btn.addEventListener("click", () => {
       const subjectId = btn.dataset.subject;
       const entryId = btn.dataset.entry;
       const subject = state.subjects.find((s) => s.id === subjectId);
       subject.entries = subject.entries.filter((e) => e.id !== entryId);
+      persist();
+      render();
+    });
+  });
+
+  scope.querySelectorAll('[data-action="remove-entry-tag"]').forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const subject = state.subjects.find((s) => s.id === btn.dataset.subject);
+      const entry = subject && subject.entries.find((e) => e.id === btn.dataset.entry);
+      if (!entry) return;
+      entry.tags = (entry.tags || []).filter((tg) => tg !== btn.dataset.tag);
       persist();
       render();
     });
@@ -3243,6 +4057,20 @@ function attachEntryDeleteHandlers(scope) {
 ====================================================================== */
 async function init() {
   try {
+    document.documentElement.setAttribute("data-theme", state.theme === "dark" ? "dark" : "light");
+
+    const themeToggleBtn = document.getElementById("themeToggleBtn");
+    const themeToggleIcon = document.getElementById("themeToggleIcon");
+    const renderThemeIcon = () => { themeToggleIcon.innerHTML = icon(state.theme === "dark" ? "sun" : "moon", 16); };
+    renderThemeIcon();
+    themeToggleBtn.addEventListener("click", () => {
+      state.theme = state.theme === "dark" ? "light" : "dark";
+      document.documentElement.setAttribute("data-theme", state.theme);
+      try { localStorage.setItem(STORAGE_KEY + ':theme', state.theme); } catch (e) {}
+      renderThemeIcon();
+      if (state.tab === "charts") renderCharts(); // refresh chart colors for the new theme
+    });
+
     const langSelect = document.getElementById("langSelect");
     langSelect.value = state.lang || 'en';
     langSelect.addEventListener("change", (e) => {
